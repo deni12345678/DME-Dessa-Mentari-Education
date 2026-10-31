@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ReportData, TeacherSettings, StudentData, PhotoItem } from './types/report';
+import { ReportData, TeacherSettings, StudentData, PhotoItem, BillingRecord } from './types/report';
 import { Header, ActiveTabType } from './components/Header';
 import { ReportForm } from './components/ReportForm';
 import { ReportCard } from './components/ReportCard';
@@ -11,6 +11,7 @@ import { AiVideoStudio } from './components/AiVideoStudio';
 import { StatsSummaryPanel } from './components/StatsSummaryPanel';
 import { StudentManagementView } from './components/StudentManagementView';
 import { PhotoGalleryView } from './components/PhotoGalleryView';
+import { BillingSummaryView } from './components/BillingSummaryView';
 import { 
   downloadReportAsImage, 
   copyWhatsAppTextToClipboard, 
@@ -26,7 +27,10 @@ import {
   subscribeStudentsFromCloud,
   savePhotoToCloud,
   deletePhotoFromCloud,
-  subscribePhotosFromCloud
+  subscribePhotosFromCloud,
+  saveBillingToCloud,
+  deleteBillingFromCloud,
+  subscribeBillingsFromCloud
 } from './lib/firebase';
 import { 
   Download, 
@@ -255,6 +259,11 @@ export default function App() {
     return saved ? JSON.parse(saved) : [];
   });
 
+  const [billings, setBillings] = useState<BillingRecord[]>(() => {
+    const saved = localStorage.getItem('dme_billing_records');
+    return saved ? JSON.parse(saved) : [];
+  });
+
   const [downloading, setDownloading] = useState(false);
   const [copiedSuccess, setCopiedSuccess] = useState(false);
   const [saveReportSuccess, setSaveReportSuccess] = useState(false);
@@ -270,7 +279,7 @@ export default function App() {
     setTimeout(() => setAdminLinkCopied(false), 2500);
   };
 
-  // Initialize Firebase Cloud test and subscribe to real-time reports, students & photos
+  // Initialize Firebase Cloud test and subscribe to real-time reports, students, photos & billings
   useEffect(() => {
     testConnection();
 
@@ -319,10 +328,22 @@ export default function App() {
       }
     );
 
+    const unsubscribeBillings = subscribeBillingsFromCloud(
+      (cloudBillings) => {
+        if (cloudBillings.length > 0) {
+          setBillings(cloudBillings);
+        }
+      },
+      (err) => {
+        console.warn('Firebase billings sync listener warning:', err);
+      }
+    );
+
     return () => {
       unsubscribeReports();
       unsubscribeStudents();
       unsubscribePhotos();
+      unsubscribeBillings();
     };
   }, []);
 
@@ -358,6 +379,11 @@ export default function App() {
     localStorage.setItem('dme_standalone_photos', JSON.stringify(standalonePhotos));
   }, [standalonePhotos]);
 
+  // Sync billings to localStorage
+  useEffect(() => {
+    localStorage.setItem('dme_billing_records', JSON.stringify(billings));
+  }, [billings]);
+
   const handleSaveStudent = (studentToSave: StudentData) => {
     setStudents((prev) => {
       const idx = prev.findIndex((s) => s.id === studentToSave.id);
@@ -390,6 +416,25 @@ export default function App() {
   const handleDeletePhoto = async (id: string) => {
     setStandalonePhotos((prev) => prev.filter((p) => p.id !== id));
     await deletePhotoFromCloud(id);
+  };
+
+  const handleSaveBilling = async (billing: BillingRecord) => {
+    setBillings((prev) => {
+      const idx = prev.findIndex((b) => b.id === billing.id);
+      if (idx >= 0) {
+        const copy = [...prev];
+        copy[idx] = billing;
+        return copy;
+      }
+      return [billing, ...prev];
+    });
+
+    await saveBillingToCloud(billing);
+  };
+
+  const handleDeleteBilling = async (id: string) => {
+    setBillings((prev) => prev.filter((b) => b.id !== id));
+    await deleteBillingFromCloud(id);
   };
 
   const handleSelectStudentForReport = (student: StudentData) => {
@@ -500,6 +545,7 @@ export default function App() {
   };
 
   const totalPhotosCount = standalonePhotos.length + savedReports.reduce((acc, r) => acc + (r.fotoDokumentasi?.length || 0), 0);
+  const unpaidBillingsCount = billings.filter((b) => b.statusPembayaran === 'Belum Bayar').length;
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
@@ -513,6 +559,7 @@ export default function App() {
         adminLinkCopied={adminLinkCopied}
         studentsCount={students.length}
         photosCount={totalPhotosCount}
+        unpaidCount={unpaidBillingsCount}
       />
 
       {/* MAIN CONTAINER */}
@@ -666,13 +713,13 @@ export default function App() {
           </div>
         )}
 
-        {activeTab === 'photos' && (
-          <PhotoGalleryView
+        {activeTab === 'billing' && (
+          <BillingSummaryView
             reports={savedReports}
-            standalonePhotos={standalonePhotos}
             students={students}
-            onUploadPhoto={handleUploadPhoto}
-            onDeletePhoto={handleDeletePhoto}
+            billings={billings}
+            onSaveBilling={handleSaveBilling}
+            onDeleteBilling={handleDeleteBilling}
           />
         )}
 

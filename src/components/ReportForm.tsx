@@ -37,6 +37,8 @@ const EDUCATION_LEVELS: EducationLevel[] = ['TK', 'SD', 'SMP', 'SMA', 'Umum/PAUD
 
 const SUBJECT_OPTIONS: SubjectOption[] = [
   'Matematika',
+  'IPAS (Ilmu Pengetahuan Alam & Sosial)',
+  'Bahasa Indonesia',
   'IPA',
   'IPS',
   'PPKn',
@@ -48,6 +50,7 @@ const SUBJECT_OPTIONS: SubjectOption[] = [
   'Kimia',
   'Biologi',
   'Ekonomi / Akuntansi',
+  'Lainnya',
 ];
 
 const PRESET_TEACHERS = [

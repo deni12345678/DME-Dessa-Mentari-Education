@@ -11,7 +11,7 @@ import {
   orderBy
 } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
-import { ReportData, StudentData, PhotoItem } from '../types/report';
+import { ReportData, StudentData, PhotoItem, BillingRecord } from '../types/report';
 
 const app = initializeApp(firebaseConfig);
 
@@ -58,6 +58,7 @@ export async function testConnection() {
 const REPORTS_COLLECTION = 'reports';
 const STUDENTS_COLLECTION = 'students';
 const PHOTOS_COLLECTION = 'photos';
+const BILLINGS_COLLECTION = 'billings';
 
 // Save or update report in cloud
 export async function saveReportToCloud(report: ReportData): Promise<void> {
@@ -258,5 +259,82 @@ export function subscribePhotosFromCloud(onData: (photos: PhotoItem[]) => void, 
     if (onError) onError(err);
   });
 }
+
+// Save or update billing statement in cloud
+export async function saveBillingToCloud(billing: BillingRecord): Promise<void> {
+  try {
+    const docRef = doc(db, BILLINGS_COLLECTION, billing.id);
+    const cleanPayload = {
+      namaSiswa: billing.namaSiswa || '',
+      bulanTahun: billing.bulanTahun || '',
+      jenjang: billing.jenjang || 'SD',
+      mataPelajaran: billing.mataPelajaran || '',
+      namaPengajar: billing.namaPengajar || '',
+      tarifPerSesi: Number(billing.tarifPerSesi) || 75000,
+      jumlahHadir: Number(billing.jumlahHadir) || 0,
+      jumlahIzin: Number(billing.jumlahIzin) || 0,
+      biayaTambahan: Number(billing.biayaTambahan) || 0,
+      keteranganBiayaTambahan: billing.keteranganBiayaTambahan || '',
+      diskon: Number(billing.diskon) || 0,
+      totalBiaya: Number(billing.totalBiaya) || 0,
+      statusPembayaran: billing.statusPembayaran || 'Belum Bayar',
+      tanggalBayar: billing.tanggalBayar || '',
+      metodePembayaran: billing.metodePembayaran || '',
+      nomorKuitansi: billing.nomorKuitansi || '',
+      catatan: billing.catatan || '',
+      createdAt: billing.createdAt || new Date().toISOString()
+    };
+    await setDoc(docRef, cleanPayload, { merge: true });
+  } catch (err) {
+    handleFirestoreError(err, OperationType.WRITE, `billings/${billing.id}`);
+  }
+}
+
+// Delete billing statement from cloud
+export async function deleteBillingFromCloud(id: string): Promise<void> {
+  try {
+    const docRef = doc(db, BILLINGS_COLLECTION, id);
+    await deleteDoc(docRef);
+  } catch (err) {
+    handleFirestoreError(err, OperationType.DELETE, `billings/${id}`);
+  }
+}
+
+// Real-time listener for billing records
+export function subscribeBillingsFromCloud(onData: (billings: BillingRecord[]) => void, onError?: (err: Error) => void) {
+  const q = query(collection(db, BILLINGS_COLLECTION), orderBy('createdAt', 'desc'));
+  
+  return onSnapshot(q, (snapshot) => {
+    const billings: BillingRecord[] = snapshot.docs.map(docSnap => {
+      const data = docSnap.data();
+      return {
+        id: docSnap.id,
+        namaSiswa: data.namaSiswa || '',
+        bulanTahun: data.bulanTahun || '',
+        jenjang: data.jenjang || 'SD',
+        mataPelajaran: data.mataPelajaran || '',
+        namaPengajar: data.namaPengajar || '',
+        tarifPerSesi: data.tarifPerSesi ?? 75000,
+        jumlahHadir: data.jumlahHadir ?? 0,
+        jumlahIzin: data.jumlahIzin ?? 0,
+        biayaTambahan: data.biayaTambahan ?? 0,
+        keteranganBiayaTambahan: data.keteranganBiayaTambahan || '',
+        diskon: data.diskon ?? 0,
+        totalBiaya: data.totalBiaya ?? 0,
+        statusPembayaran: data.statusPembayaran || 'Belum Bayar',
+        tanggalBayar: data.tanggalBayar || '',
+        metodePembayaran: data.metodePembayaran || '',
+        nomorKuitansi: data.nomorKuitansi || '',
+        catatan: data.catatan || '',
+        createdAt: data.createdAt || new Date().toISOString()
+      };
+    });
+    onData(billings);
+  }, (err) => {
+    console.error("Firestore billings snapshot error:", err);
+    if (onError) onError(err);
+  });
+}
+
 
 

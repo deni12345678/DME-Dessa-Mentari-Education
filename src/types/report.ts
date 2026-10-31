@@ -2,6 +2,8 @@ export type EducationLevel = 'TK' | 'SD' | 'SMP' | 'SMA' | 'Umum/PAUD';
 
 export type SubjectOption = 
   | 'Matematika'
+  | 'IPAS (Ilmu Pengetahuan Alam & Sosial)'
+  | 'Bahasa Indonesia'
   | 'IPA'
   | 'IPS'
   | 'PPKn'
@@ -83,4 +85,28 @@ export interface TeacherSettings {
   lembagaName: string;
   lembagaTagline: string;
   contactInfo: string;
+}
+
+export type PaymentStatus = 'Belum Bayar' | 'Lunas' | 'Sebagian';
+
+export interface BillingRecord {
+  id: string;
+  namaSiswa: string;
+  bulanTahun: string; // e.g. "2026-10" or "Oktober 2026"
+  jenjang: EducationLevel;
+  mataPelajaran?: string;
+  namaPengajar?: string;
+  tarifPerSesi: number; // e.g. 75000
+  jumlahHadir: number;
+  jumlahIzin?: number;
+  biayaTambahan?: number;
+  keteranganBiayaTambahan?: string;
+  diskon?: number;
+  totalBiaya: number; // (jumlahHadir * tarifPerSesi) + biayaTambahan - diskon
+  statusPembayaran: PaymentStatus;
+  tanggalBayar?: string;
+  metodePembayaran?: string;
+  nomorKuitansi?: string;
+  catatan?: string;
+  createdAt: string;
 }
