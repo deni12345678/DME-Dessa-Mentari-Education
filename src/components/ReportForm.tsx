@@ -540,19 +540,70 @@ export const ReportForm: React.FC<ReportFormProps> = ({
             <span className="text-[10px] text-slate-400 font-medium">Opsional</span>
           </div>
 
+          {/* Template Info Banner */}
+          <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/90 rounded-xl p-2.5 flex items-center gap-2.5">
+            <img
+              src="/assets/aistudio/Logo_Pendidikan_Dessa_Mentari_6f1f1e2d.png"
+              alt="Logo"
+              className="w-7 h-7 object-contain shrink-0 rounded-md bg-white p-0.5 border border-amber-300"
+            />
+            <div className="text-[11px] leading-tight">
+              <span className="font-extrabold text-amber-950 block">Template Berlogo Resmi Dessa Mentari Education</span>
+              <span className="text-amber-800 font-medium text-[10px]">
+                Keterangan: <strong>Les Privat Keluarga Indonesia</strong> (Otomatis tercetak pada kartu & bingkai foto).
+              </span>
+            </div>
+          </div>
+
           <p className="text-xs text-slate-500">
-            Unggah foto pembelajaran siswa (kegiatan les, hasil latihan, praktikum). Kompresi otomatis web-optimized.
+            Unggah foto pembelajaran siswa (kegiatan les, hasil latihan, modul). Anda dapat memilih dari galeri HP atau langsung memotret dengan kamera.
           </p>
 
-          {/* Photo File Upload Trigger */}
+          {/* Photo File Upload Triggers: Galeri HP & Kamera */}
           <div className="flex flex-wrap items-center gap-2 pt-1">
+            {/* 1. Pilih dari Galeri HP */}
             <label className="px-3.5 py-2 text-xs font-bold text-amber-950 bg-amber-300 hover:bg-amber-200 cursor-pointer rounded-xl transition-all shadow-2xs flex items-center gap-1.5 active:scale-95">
-              <Upload className="w-3.5 h-3.5" />
-              <span>+ Pilih / Ambil Foto</span>
+              <ImageIcon className="w-4 h-4 text-amber-900" />
+              <span>+ Pilih dari Galeri HP</span>
               <input
                 type="file"
                 accept="image/*"
                 multiple
+                className="hidden"
+                onChange={async (e) => {
+                  if (!e.target.files) return;
+                  const files = Array.from(e.target.files);
+                  const newItems = [];
+                  for (const file of files) {
+                    try {
+                      const compressedUrl = await compressImageFile(file);
+                      newItems.push({
+                        id: `IMG-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+                        url: compressedUrl,
+                        caption: `Dokumentasi Les ${report.mataPelajaran || ''}`,
+                        namaSiswa: report.namaSiswa,
+                        tanggal: report.tanggal,
+                        namaPengajar: report.namaPengajar,
+                        createdAt: new Date().toISOString()
+                      });
+                    } catch (err) {
+                      console.error('Failed to compress photo:', err);
+                    }
+                  }
+                  const currentPhotos = report.fotoDokumentasi || [];
+                  onChange({ fotoDokumentasi: [...currentPhotos, ...newItems].slice(0, 6) });
+                  e.target.value = '';
+                }}
+              />
+            </label>
+
+            {/* 2. Ambil Foto Kamera */}
+            <label className="px-3.5 py-2 text-xs font-bold text-slate-800 bg-white hover:bg-slate-100 border border-slate-300 cursor-pointer rounded-xl transition-all shadow-2xs flex items-center gap-1.5 active:scale-95">
+              <Camera className="w-4 h-4 text-slate-700" />
+              <span>Ambil Foto Kamera</span>
+              <input
+                type="file"
+                accept="image/*"
                 capture="environment"
                 className="hidden"
                 onChange={async (e) => {
@@ -587,7 +638,15 @@ export const ReportForm: React.FC<ReportFormProps> = ({
           {(report.fotoDokumentasi || []).length > 0 && (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
               {(report.fotoDokumentasi || []).map((photo, idx) => (
-                <div key={photo.id || idx} className="relative group bg-white rounded-xl border border-slate-200 overflow-hidden shadow-2xs">
+                <div key={photo.id || idx} className="relative group bg-white rounded-xl border border-slate-200 overflow-hidden shadow-2xs flex flex-col">
+                  {/* Top Branding Mini Badge */}
+                  <div className="bg-slate-900 text-white px-2 py-1 flex items-center justify-between text-[8px] font-semibold">
+                    <span className="text-amber-300 flex items-center gap-1">
+                      <Sparkles className="w-2.5 h-2.5" /> Template DME
+                    </span>
+                    <span className="text-slate-400">Foto #{idx + 1}</span>
+                  </div>
+
                   <div className="aspect-4/3 w-full bg-slate-100 overflow-hidden relative">
                     <img
                       src={photo.url}
@@ -606,7 +665,7 @@ export const ReportForm: React.FC<ReportFormProps> = ({
                       <X className="w-3.5 h-3.5" />
                     </button>
                   </div>
-                  <div className="p-2">
+                  <div className="p-2 space-y-1">
                     <input
                       type="text"
                       value={photo.caption || ''}
@@ -616,7 +675,7 @@ export const ReportForm: React.FC<ReportFormProps> = ({
                         onChange({ fotoDokumentasi: updatedList });
                       }}
                       placeholder="Judul / Keterangan foto..."
-                      className="w-full text-[11px] p-1 rounded border border-slate-200 outline-none focus:border-amber-500"
+                      className="w-full text-[11px] p-1.5 rounded-lg border border-slate-200 outline-none focus:border-amber-500 font-medium"
                     />
                   </div>
                 </div>

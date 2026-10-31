@@ -370,7 +370,7 @@ export const ReportCard: React.FC<ReportCardProps> = ({ report }) => {
               <div className="flex items-center gap-2">
                 <Camera className={`w-3.5 h-3.5 ${t.sectionHeaderText}`} />
                 <h2 className={`text-[11px] font-bold uppercase tracking-wider ${t.sectionHeaderText}`}>
-                  Dokumentasi Foto Sesi Les
+                  Dokumentasi Foto Sesi Les (Template Berlogo Resmi)
                 </h2>
               </div>
               <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${t.badgeBg} border ${t.badgeBorder}`}>
@@ -378,21 +378,45 @@ export const ReportCard: React.FC<ReportCardProps> = ({ report }) => {
               </span>
             </div>
 
-            <div className="p-3 grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+            <div className="p-3.5 grid grid-cols-2 sm:grid-cols-3 gap-3">
               {report.fotoDokumentasi.map((photo, idx) => (
-                <div key={photo.id || idx} className="rounded-lg border border-slate-200 overflow-hidden bg-slate-50 flex flex-col">
-                  <div className="aspect-4/3 w-full bg-slate-200 overflow-hidden relative">
+                <div key={photo.id || idx} className="rounded-xl border border-amber-200/80 overflow-hidden bg-white shadow-2xs flex flex-col">
+                  {/* BRANDED TEMPLATE HEADER ON EACH PHOTO WITH OFFICIAL LOGO */}
+                  <div className="bg-gradient-to-r from-slate-900 via-amber-950 to-slate-900 text-white px-2 py-1.5 flex items-center justify-between border-b border-amber-500/30">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <img
+                        src="/assets/aistudio/Logo_Pendidikan_Dessa_Mentari_6f1f1e2d.png"
+                        alt="Logo"
+                        className="w-4 h-4 object-contain shrink-0"
+                      />
+                      <span className="font-extrabold text-[9px] text-amber-200 truncate font-serif-brand">
+                        Dessa Mentari Education
+                      </span>
+                    </div>
+                    <span className="text-[7.5px] font-semibold text-amber-300 bg-amber-400/20 px-1 py-0.2 rounded border border-amber-400/30 shrink-0">
+                      Keluarga Indonesia
+                    </span>
+                  </div>
+
+                  {/* Photo Display */}
+                  <div className="aspect-4/3 w-full bg-slate-100 overflow-hidden relative">
                     <img
                       src={photo.url}
                       alt={photo.caption || `Foto Dokumentasi ${idx + 1}`}
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  {photo.caption && (
-                    <div className="p-1.5 text-[10px] font-medium text-slate-700 truncate bg-white border-t border-slate-100">
-                      {photo.caption}
+
+                  {/* Caption & Metadata Footer */}
+                  <div className="p-2 text-[9px] font-medium text-slate-700 bg-slate-50/80 border-t border-slate-100 space-y-0.5">
+                    <div className="font-semibold text-slate-900 truncate">
+                      {photo.caption || 'Dokumentasi Kegiatan Les'}
                     </div>
-                  )}
+                    <div className="flex items-center justify-between text-[8px] text-slate-400">
+                      <span>{report.namaSiswa}</span>
+                      <span className="text-amber-800 font-bold">{report.tanggal}</span>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -411,7 +435,7 @@ export const ReportCard: React.FC<ReportCardProps> = ({ report }) => {
               <span>Dessa Mentari Education</span>
             </div>
             <p className={`text-[10px] ${isDark ? 'text-zinc-400' : 'text-slate-400'}`}>
-              Tempat Belajar Terpercaya · Les Privat Bergaransi
+              Tempat Belajar Terpercaya · Les Privat Keluarga Indonesia
             </p>
           </div>
 

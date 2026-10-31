@@ -89,6 +89,16 @@ export interface TeacherSettings {
 
 export type PaymentStatus = 'Belum Bayar' | 'Lunas' | 'Sebagian';
 
+export interface ManualSessionItem {
+  id: string;
+  tanggal: string; // YYYY-MM-DD
+  materi?: string;
+  durasi?: string; // e.g. "90 Menit"
+  catatan?: string;
+}
+
+export type FeeCalculationMode = 'per_sesi' | 'per_jam' | 'manual_total';
+
 export interface BillingRecord {
   id: string;
   namaSiswa: string;
@@ -96,17 +106,34 @@ export interface BillingRecord {
   jenjang: EducationLevel;
   mataPelajaran?: string;
   namaPengajar?: string;
+  
+  // Fee calculation options
+  modeKalkulasi?: FeeCalculationMode; // 'per_sesi' (sesi x tarif), 'per_jam' (jam x tarif/jam), or 'manual_total' (direct input)
   tarifPerSesi: number; // e.g. 75000
+  tarifPerJam?: number; // e.g. 50000
+  totalJam?: number; // e.g. 6 or 8.5
   jumlahHadir: number;
   jumlahIzin?: number;
-  biayaTambahan?: number;
+  
+  biayaTambahan?: number; // Biaya modul / transport / lainnya
   keteranganBiayaTambahan?: string;
-  diskon?: number;
-  totalBiaya: number; // (jumlahHadir * tarifPerSesi) + biayaTambahan - diskon
+  biayaTransport?: number; // Biaya transport pengajar
+  diskon?: number; // Potongan biaya
+  keteranganDiskon?: string;
+  
+  totalBiaya: number; // Final total amount
+  totalBiayaManual?: number; // Direct manual override amount if modeKalkulasi === 'manual_total'
+  jumlahTerbayar?: number; // Amount already paid (for DP or partial payment)
+  sisaTagihan?: number; // totalBiaya - (jumlahTerbayar || 0)
+  
   statusPembayaran: PaymentStatus;
   tanggalBayar?: string;
   metodePembayaran?: string;
   nomorKuitansi?: string;
   catatan?: string;
+  
+  isManualEntry?: boolean; // true if created manually without auto-aggregation
+  daftarSesiManual?: ManualSessionItem[]; // optional list of manual session meetings
   createdAt: string;
 }
+

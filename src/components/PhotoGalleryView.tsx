@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import html2canvas from 'html2canvas';
 import { PhotoItem, ReportData, StudentData } from '../types/report';
 import { compressImageFile } from '../utils/imageCompressor';
 import { 
@@ -15,7 +16,12 @@ import {
   BookOpen, 
   Sparkles,
   Cloud,
-  CheckCircle2
+  CheckCircle2,
+  Image as ImageIcon,
+  Send,
+  Share2,
+  Award,
+  Sun
 } from 'lucide-react';
 
 interface PhotoGalleryViewProps {
@@ -37,6 +43,8 @@ export const PhotoGalleryView: React.FC<PhotoGalleryViewProps> = ({
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeTabFilter, setActiveTabFilter] = useState<'all' | 'reports' | 'direct'>('all');
   const [activeLightboxPhoto, setActiveLightboxPhoto] = useState<PhotoItem | null>(null);
+  const [activeTemplatePhoto, setActiveTemplatePhoto] = useState<PhotoItem | null>(null);
+  const [downloadingTemplate, setDownloadingTemplate] = useState(false);
   
   // Upload Modal State
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -160,6 +168,40 @@ export const PhotoGalleryView: React.FC<PhotoGalleryViewProps> = ({
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+  };
+
+  const handleDownloadBrandedCard = async (photo: PhotoItem) => {
+    const element = document.getElementById('branded-photo-canvas-card');
+    if (!element) return;
+    setDownloadingTemplate(true);
+    try {
+      const canvas = await html2canvas(element, {
+        scale: 3,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#0f172a',
+        logging: false,
+      });
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+      const link = document.createElement('a');
+      link.download = `Template_Foto_DME_${(photo.namaSiswa || 'Siswa').replace(/\s+/g, '_')}_${photo.tanggal || 'Les'}.jpg`;
+      link.href = dataUrl;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error('Error generating branded photo card:', err);
+      alert('Gagal mengunduh kartu template foto.');
+    } finally {
+      setDownloadingTemplate(false);
+    }
+  };
+
+  const handleSendTemplateWa = (photo: PhotoItem) => {
+    const text = encodeURIComponent(
+      `*DOKUMENTASI FOTO LES PRIVAT*\n*DESSA MENTARI EDUCATION*\n_Tempat Belajar Terpercaya · Les Privat Keluarga Indonesia_\n----------------------------------------\n👤 *Nama Siswa:* ${photo.namaSiswa || 'Siswa'}\n📚 *Mata Pelajaran:* ${photo.mataPelajaran || 'Les Privat'}\n📅 *Tanggal Sesi:* ${photo.tanggal || '-'}\n👨‍🏫 *Pengajar:* ${photo.namaPengajar || 'Dessa Mentari'}\n\n📝 *Keterangan Foto:* ${photo.caption || 'Dokumentasi pembelajaran ananda hari ini.'}\n----------------------------------------\n_Terima kasih atas kepercayaan Ibu/Bapak bersama Dessa Mentari Education!_ 🙏🏻`
+    );
+    window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
   };
 
   return (
@@ -315,6 +357,15 @@ export const PhotoGalleryView: React.FC<PhotoGalleryViewProps> = ({
                   <p className="text-xs text-slate-700 font-medium line-clamp-2 mt-1 leading-snug">
                     {photo.caption || 'Dokumentasi pembelajaran les privat'}
                   </p>
+
+                  {/* Template Button */}
+                  <button
+                    onClick={() => setActiveTemplatePhoto(photo)}
+                    className="w-full mt-2 py-1.5 px-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 font-bold text-[11px] rounded-xl flex items-center justify-center gap-1.5 shadow-2xs transition-all active:scale-95"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Template Foto Berlogo</span>
+                  </button>
                 </div>
 
                 <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400">
@@ -327,7 +378,7 @@ export const PhotoGalleryView: React.FC<PhotoGalleryViewProps> = ({
                     <button
                       onClick={() => handleDownloadPhoto(photo.url, `Dokumentasi_${photo.namaSiswa}_${photo.tanggal}.jpg`)}
                       className="p-1.5 text-slate-500 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-colors"
-                      title="Unduh foto"
+                      title="Unduh file foto mentah"
                     >
                       <Download className="w-3.5 h-3.5" />
                     </button>
@@ -376,10 +427,25 @@ export const PhotoGalleryView: React.FC<PhotoGalleryViewProps> = ({
             </div>
 
             <form onSubmit={handleSubmitNewPhoto} className="space-y-4">
+              {/* Template Info Banner */}
+              <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/90 rounded-xl p-3 flex items-center gap-3">
+                <img
+                  src="/assets/aistudio/Logo_Pendidikan_Dessa_Mentari_6f1f1e2d.png"
+                  alt="Logo"
+                  className="w-8 h-8 object-contain shrink-0 rounded-lg bg-white p-0.5 border border-amber-300 shadow-2xs"
+                />
+                <div className="text-[11px] leading-tight">
+                  <span className="font-extrabold text-amber-950 block">Template Resmi Dessa Mentari Education</span>
+                  <span className="text-amber-800 font-medium text-[10px]">
+                    Keterangan: <strong>Les Privat Keluarga Indonesia</strong> (Tersedia template bingkai & ekspor kartu foto).
+                  </span>
+                </div>
+              </div>
+
               {/* Image Picker */}
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  Foto Pembelajaran <span className="text-red-500">*</span>
+                  Pilih Foto Pembelajaran <span className="text-red-500">*</span>
                 </label>
 
                 {pendingPhotoUrl ? (
@@ -389,27 +455,53 @@ export const PhotoGalleryView: React.FC<PhotoGalleryViewProps> = ({
                       type="button"
                       onClick={() => setPendingPhotoUrl(null)}
                       className="absolute top-2 right-2 p-1.5 bg-slate-900/80 hover:bg-red-600 text-white rounded-full transition-colors"
+                      title="Ganti foto"
                     >
                       <X className="w-4 h-4" />
                     </button>
                   </div>
                 ) : (
-                  <label className="border-2 border-dashed border-slate-300 hover:border-amber-500 rounded-xl p-6 text-center block cursor-pointer bg-slate-50 hover:bg-amber-50/50 transition-colors">
-                    <Upload className="w-8 h-8 text-amber-600 mx-auto mb-2" />
-                    <span className="text-xs font-bold text-slate-700 block">
-                      Klik untuk Pilih / Ambil Foto
-                    </span>
-                    <span className="text-[11px] text-slate-400">
-                      Mendukung kamera HP, JPG, PNG, WEBP (Otomatis Kompresi)
-                    </span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      capture="environment"
-                      className="hidden"
-                      onChange={handleFileSelect}
-                    />
-                  </label>
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-2 gap-2.5">
+                      {/* Button 1: Pilih dari Galeri HP */}
+                      <label className="border-2 border-dashed border-amber-400/80 hover:border-amber-500 rounded-xl p-4 text-center block cursor-pointer bg-amber-50/50 hover:bg-amber-100/50 transition-all active:scale-[0.98]">
+                        <ImageIcon className="w-6 h-6 text-amber-700 mx-auto mb-1.5" />
+                        <span className="text-xs font-bold text-amber-950 block">
+                          Pilih dari Galeri HP
+                        </span>
+                        <span className="text-[10px] text-amber-800 block mt-0.5">
+                          Buka album / galeri foto HP
+                        </span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleFileSelect}
+                        />
+                      </label>
+
+                      {/* Button 2: Ambil Foto Kamera */}
+                      <label className="border-2 border-dashed border-slate-300 hover:border-slate-400 rounded-xl p-4 text-center block cursor-pointer bg-slate-50 hover:bg-slate-100 transition-all active:scale-[0.98]">
+                        <Camera className="w-6 h-6 text-slate-700 mx-auto mb-1.5" />
+                        <span className="text-xs font-bold text-slate-800 block">
+                          Ambil Foto Kamera
+                        </span>
+                        <span className="text-[10px] text-slate-500 block mt-0.5">
+                          Buka kamera HP langsung
+                        </span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          capture="environment"
+                          className="hidden"
+                          onChange={handleFileSelect}
+                        />
+                      </label>
+                    </div>
+                    <p className="text-[10px] text-slate-400 text-center">
+                      Mendukung format JPG, PNG, WEBP dengan kompresi otomatis web-optimized.
+                    </p>
+                  </div>
                 )}
               </div>
 
@@ -543,23 +635,186 @@ export const PhotoGalleryView: React.FC<PhotoGalleryViewProps> = ({
             </div>
 
             {/* Bottom Info & Download Bar */}
-            <div className="p-4 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-white">
+            <div className="p-4 bg-slate-900 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2 text-white">
               <p className="text-xs text-slate-300 italic">
                 "{activeLightboxPhoto.caption || 'Foto Dokumentasi Les Privat Dessa Mentari Education'}"
               </p>
 
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    setActiveTemplatePhoto(activeLightboxPhoto);
+                    setActiveLightboxPhoto(null);
+                  }}
+                  className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 font-extrabold text-xs rounded-xl flex items-center gap-1.5 shadow-xs"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>Buka Template Berlogo</span>
+                </button>
+
+                <button
+                  onClick={() =>
+                    handleDownloadPhoto(
+                      activeLightboxPhoto.url,
+                      `Foto_Dokumentasi_${activeLightboxPhoto.namaSiswa}_${activeLightboxPhoto.tanggal}.jpg`
+                    )
+                  }
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl flex items-center gap-2 shadow-xs shrink-0"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Unduh Foto Mentah</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* BRANDED PHOTO TEMPLATE MODAL */}
+      {activeTemplatePhoto && (
+        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+          <div className="max-w-2xl w-full bg-slate-900 rounded-3xl overflow-hidden border border-amber-500/40 shadow-2xl flex flex-col my-6">
+            {/* Modal Top Bar */}
+            <div className="p-4 bg-slate-900 border-b border-slate-800 flex items-center justify-between text-white">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-amber-400" />
+                <h3 className="text-base font-bold text-amber-200">
+                  Template Foto Resmi Dessa Mentari Education
+                </h3>
+              </div>
               <button
-                onClick={() =>
-                  handleDownloadPhoto(
-                    activeLightboxPhoto.url,
-                    `Foto_Dokumentasi_${activeLightboxPhoto.namaSiswa}_${activeLightboxPhoto.tanggal}.jpg`
-                  )
-                }
-                className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-xs rounded-xl flex items-center gap-2 shadow-xs shrink-0"
+                onClick={() => setActiveTemplatePhoto(null)}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
               >
-                <Download className="w-4 h-4" />
-                <span>Unduh Foto</span>
+                <X className="w-5 h-5" />
               </button>
+            </div>
+
+            {/* Scrollable Container with the Branded Card */}
+            <div className="p-4 sm:p-6 bg-slate-950/60 overflow-y-auto flex justify-center">
+              {/* THE BRANDED PHOTO CARD TO CAPTURE */}
+              <div
+                id="branded-photo-canvas-card"
+                className="w-full max-w-xl bg-gradient-to-b from-slate-900 via-zinc-900 to-slate-950 text-white rounded-2xl border-2 border-amber-500/80 shadow-2xl overflow-hidden relative"
+              >
+                {/* Official Branded Header */}
+                <div className="bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 p-4 text-white flex items-center justify-between relative overflow-hidden">
+                  <div className="flex items-center gap-3 relative z-10">
+                    <div className="w-12 h-12 rounded-xl bg-white p-1 shadow-md shrink-0 flex items-center justify-center border border-white/50">
+                      <img
+                        src="/assets/aistudio/Logo_Pendidikan_Dessa_Mentari_6f1f1e2d.png"
+                        alt="Logo Dessa Mentari Education"
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-extrabold uppercase tracking-widest text-amber-200 flex items-center gap-1">
+                        <Sparkles className="w-3 h-3" />
+                        DESSA MENTARI EDUCATION
+                      </div>
+                      <h4 className="text-base font-extrabold tracking-tight font-serif-brand">
+                        Dokumentasi Kegiatan Belajar
+                      </h4>
+                      <p className="text-[11px] text-amber-100 font-medium">
+                        Tempat Belajar Terpercaya · Les Privat Keluarga Indonesia
+                      </p>
+                    </div>
+                  </div>
+
+                  <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-bold bg-white/20 text-white px-2.5 py-1 rounded-full border border-white/30 shrink-0">
+                    <Award className="w-3 h-3 text-amber-300" />
+                    Verified Photo
+                  </span>
+                </div>
+
+                {/* Central Photo */}
+                <div className="p-4 bg-slate-950/80">
+                  <div className="relative rounded-xl overflow-hidden border-2 border-amber-400/40 shadow-inner aspect-4/3 bg-black flex items-center justify-center">
+                    <img
+                      src={activeTemplatePhoto.url}
+                      alt={activeTemplatePhoto.caption || 'Foto'}
+                      className="w-full h-full object-cover"
+                    />
+                    
+                    {/* Floating Watermark Badge on Photo */}
+                    <div className="absolute bottom-2 left-2 bg-slate-950/80 backdrop-blur-xs px-2.5 py-1 rounded-lg border border-amber-400/40 text-[10px] font-semibold text-amber-200 flex items-center gap-1.5 shadow-md">
+                      <Sun className="w-3.5 h-3.5 text-amber-400" />
+                      <span>{activeTemplatePhoto.namaSiswa} · {activeTemplatePhoto.mataPelajaran || 'Les Privat'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bottom Metadata & Info Bar */}
+                <div className="p-4 bg-zinc-900 border-t border-amber-500/30 space-y-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
+                    <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700">
+                      <span className="text-[9px] uppercase font-bold text-slate-400 block">Siswa</span>
+                      <p className="font-extrabold text-amber-200 truncate">{activeTemplatePhoto.namaSiswa}</p>
+                    </div>
+
+                    <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700">
+                      <span className="text-[9px] uppercase font-bold text-slate-400 block">Mata Pelajaran</span>
+                      <p className="font-bold text-white truncate">{activeTemplatePhoto.mataPelajaran || 'Les Privat'}</p>
+                    </div>
+
+                    <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700 col-span-2 sm:col-span-1">
+                      <span className="text-[9px] uppercase font-bold text-slate-400 block">Tanggal / Pengajar</span>
+                      <p className="font-medium text-slate-300 truncate">
+                        {activeTemplatePhoto.tanggal || '-'} · {activeTemplatePhoto.namaPengajar || 'Dessa Mentari'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {activeTemplatePhoto.caption && (
+                    <div className="bg-amber-950/30 border border-amber-500/30 p-2.5 rounded-xl text-xs text-amber-100 italic">
+                      "{activeTemplatePhoto.caption}"
+                    </div>
+                  )}
+
+                  {/* Brand Tagline in Template */}
+                  <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-[10px] text-slate-400">
+                    <div className="flex items-center gap-1.5">
+                      <img
+                        src="/assets/aistudio/Logo_Pendidikan_Dessa_Mentari_6f1f1e2d.png"
+                        alt="Logo"
+                        className="w-4 h-4 object-contain"
+                      />
+                      <span className="font-bold text-slate-300">Dessa Mentari Education</span>
+                      <span>— Les Privat Keluarga Indonesia</span>
+                    </div>
+                    <span className="font-mono text-amber-400/80">DOC-{activeTemplatePhoto.id?.substring(0, 8) || 'DME'}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Bottom Action Buttons */}
+            <div className="p-4 bg-slate-900 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3">
+              <button
+                onClick={() => handleSendTemplateWa(activeTemplatePhoto)}
+                className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl flex items-center gap-2 shadow-xs transition-all active:scale-95"
+              >
+                <Send className="w-4 h-4" />
+                <span>Kirim via WhatsApp</span>
+              </button>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setActiveTemplatePhoto(null)}
+                  className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl transition-all"
+                >
+                  Tutup
+                </button>
+
+                <button
+                  onClick={() => handleDownloadBrandedCard(activeTemplatePhoto)}
+                  disabled={downloadingTemplate}
+                  className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 font-extrabold text-xs rounded-xl flex items-center gap-2 shadow-md transition-all active:scale-95 disabled:opacity-50"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>{downloadingTemplate ? 'Menyiapkan Gambar...' : 'Unduh Kartu Template (JPG)'}</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>

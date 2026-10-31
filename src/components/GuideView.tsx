@@ -70,6 +70,19 @@ export const GuideView: React.FC = () => {
             </p>
           </div>
         </div>
+
+        {/* Step 5 */}
+        <div className="flex gap-4">
+          <div className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-900 font-bold flex items-center justify-center shrink-0 text-xs">
+            5
+          </div>
+          <div className="space-y-1">
+            <h3 className="font-bold text-slate-900 text-sm">Rekapan Sesi & Biaya Les (Per Sesi, Per Jam, & Manual)</h3>
+            <p>
+              Pada tab <b>"Rekap & Biaya"</b>, Anda dapat memilih mode perhitungan biaya les: <b>Hitung Per Sesi (Sesi × Tarif)</b>, <b>Hitung Per Jam (Total Jam × Tarif/Jam)</b> untuk les berdasarkan durasi waktu riil, atau <b>Nominal Manual (Paket Bulanan)</b>. Anda juga dapat mencatat daftar pertemuan manual, transport, modul, potongan diskon, membuat invoice WhatsApp, dan mencetak kuitansi resmi digital.
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Quote Banner */}
