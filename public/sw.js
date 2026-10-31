@@ -1,10 +1,14 @@
 // Service Worker for Dessa Mentari Education PWA
-const CACHE_NAME = 'dme-pwa-v1';
+const CACHE_NAME = 'dme-pwa-v2';
 const PRECACHE_URLS = [
   '/',
   '/manifest.webmanifest',
+  '/manifest.json',
   '/pwa-192x192.png',
   '/pwa-512x512.png',
+  '/pwa-maskable-192x192.png',
+  '/pwa-maskable-512x512.png',
+  '/apple-touch-icon.png',
   '/assets/aistudio/Logo_Pendidikan_Dessa_Mentari_6f1f1e2d.png'
 ];
 
@@ -12,7 +16,7 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(PRECACHE_URLS).catch((err) => {
-        console.warn('Pre-cache error (non-fatal):', err);
+        console.warn('Pre-cache item failure (continuing):', err);
       });
     }).then(() => self.skipWaiting())
   );
@@ -38,8 +42,13 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(event.request.url);
 
-  // Skip caching for backend API requests and Chrome extensions
-  if (url.pathname.startsWith('/api/') || !url.protocol.startsWith('http')) {
+  // Skip caching for backend API requests, Firebase websockets/APIs, and Chrome extensions
+  if (
+    url.pathname.startsWith('/api/') || 
+    url.hostname.includes('firestore.googleapis.com') ||
+    url.hostname.includes('firebase') ||
+    !url.protocol.startsWith('http')
+  ) {
     return;
   }
 

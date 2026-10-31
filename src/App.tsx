@@ -271,6 +271,12 @@ export default function App() {
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
   const [showInstallBanner, setShowInstallBanner] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const isStandalone =
+        (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+        (window.navigator as any).standalone === true;
+      if (isStandalone) return false;
+    }
     return localStorage.getItem('dme_hide_install_banner') !== 'true';
   });
   const [adminLinkCopied, setAdminLinkCopied] = useState(false);
