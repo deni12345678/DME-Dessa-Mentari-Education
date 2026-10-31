@@ -62,7 +62,7 @@ async function inlineImageToDataUrl(img: HTMLImageElement): Promise<void> {
 }
 
 /**
- * Prepares and sanitizes cloned element before canvas capture.
+ * Prepares and sanitizes cloned element before canvas capture, ensuring html2canvas renders flawlessly without distortion.
  */
 async function sanitizeClonedElement(clonedEl: HTMLElement) {
   clonedEl.style.transform = 'none';
@@ -70,6 +70,14 @@ async function sanitizeClonedElement(clonedEl: HTMLElement) {
   clonedEl.style.maxWidth = '760px';
   clonedEl.style.boxSizing = 'border-box';
   clonedEl.style.margin = '0 auto';
+  clonedEl.style.backgroundColor = '#ffffff';
+
+  // Neutralize complex gradient backgrounds that html2canvas misrenders on mobile
+  const gradientElements = Array.from(clonedEl.querySelectorAll('[class*="bg-gradient"]'));
+  for (const el of gradientElements) {
+    (el as HTMLElement).style.backgroundImage = 'none';
+    (el as HTMLElement).style.backgroundColor = '#0f172a';
+  }
 
   // Sanitize all images inside the clone
   const clonedImgs = Array.from(clonedEl.querySelectorAll('img'));
@@ -120,13 +128,13 @@ export async function captureElementToCanvas(
     const canvas = await html2canvas(element as HTMLElement, {
       scale,
       useCORS: true,
-      allowTaint: false, // NEVER allow taint, so toDataURL/toBlob always succeed!
+      allowTaint: false,
       backgroundColor,
       logging: false,
       imageTimeout: 7000,
       scrollX: 0,
       scrollY: 0,
-      windowWidth: 800, // Provides ample virtual viewport for 760px layout
+      windowWidth: 800,
       onclone: async (clonedDoc) => {
         const clonedEl = clonedDoc.getElementById(elementId);
         if (clonedEl) {
@@ -176,7 +184,6 @@ export interface PdfExportResult {
 
 /**
  * Downloads the report as an official, strictly SINGLE-PAGE A4 PDF document.
- * The filename strictly matches the student's name and date.
  */
 export async function downloadReportAsPdf(
   elementId: string,
@@ -192,7 +199,7 @@ export async function downloadReportAsPdf(
       return { success: true, filename: finalFilename };
     }
 
-    const imgData = canvas.toDataURL('image/jpeg', 0.96);
+    const imgData = canvas.toDataURL('image/jpeg', 0.95);
 
     // Standard A4 dimensions in mm: 210 x 297
     const pdf = new jsPDF({
@@ -210,8 +217,6 @@ export async function downloadReportAsPdf(
 
     const naturalHeight = (canvas.height * maxContentWidth) / canvas.width;
 
-    // STRICT SINGLE-PAGE A4 GUARANTEE:
-    // Scale down if height exceeds single A4 printable page, centering both vertically & horizontally.
     let finalWidth = maxContentWidth;
     let finalHeight = naturalHeight;
 
@@ -225,8 +230,6 @@ export async function downloadReportAsPdf(
     const yOffset = margin + (maxContentHeight - finalHeight) / 2;
 
     pdf.addImage(imgData, 'JPEG', xOffset, yOffset, finalWidth, finalHeight, undefined, 'FAST');
-    // STRICTLY 1 PAGE: Never call pdf.addPage()
-
     pdf.save(finalFilename);
     return { success: true, filename: finalFilename };
   } catch (err: unknown) {
