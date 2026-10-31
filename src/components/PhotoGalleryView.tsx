@@ -175,20 +175,33 @@ export const PhotoGalleryView: React.FC<PhotoGalleryViewProps> = ({
     if (!element) return;
     setDownloadingTemplate(true);
     try {
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: false,
-        backgroundColor: '#0f172a',
-        logging: false,
-      });
+      let canvas: HTMLCanvasElement | null = null;
+      for (const scale of [2, 1.5, 1]) {
+        try {
+          canvas = await html2canvas(element, {
+            scale,
+            useCORS: true,
+            allowTaint: false,
+            backgroundColor: '#0f172a',
+            logging: false,
+            imageTimeout: 6000,
+          });
+          if (canvas) break;
+        } catch (scaleErr) {
+          console.warn(`Photo template capture at scale ${scale} failed:`, scaleErr);
+        }
+      }
+
+      if (!canvas) {
+        throw new Error('Canvas generation returned null');
+      }
 
       const cleanStudent = (photo.namaSiswa || 'Siswa').trim().replace(/[^a-zA-Z0-9_-]/g, '_');
       const cleanDate = (photo.tanggal || 'Les').trim().replace(/[^a-zA-Z0-9_-]/g, '_');
       const finalFilename = `Template_Foto_DME_${cleanStudent}_${cleanDate}.jpg`;
 
       const blob = await new Promise<Blob | null>((resolve) => {
-        canvas.toBlob(resolve, 'image/jpeg', 0.95);
+        canvas!.toBlob(resolve, 'image/jpeg', 0.95);
       });
 
       if (blob) {
@@ -215,7 +228,12 @@ export const PhotoGalleryView: React.FC<PhotoGalleryViewProps> = ({
       }
     } catch (err) {
       console.error('Error generating branded photo card:', err);
-      alert('Gagal mengunduh kartu template foto.');
+      // Fallback: direct download original photo URL
+      if (photo.url) {
+        handleDownloadPhoto(photo.url, `Foto_Dokumentasi_${photo.namaSiswa || 'Les'}.jpg`);
+      } else {
+        alert('Gagal mengunduh kartu template foto.');
+      }
     } finally {
       setDownloadingTemplate(false);
     }

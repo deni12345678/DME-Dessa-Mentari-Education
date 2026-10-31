@@ -16,7 +16,8 @@ import {
   Target,
   User,
   PieChart,
-  Download
+  Download,
+  FileText
 } from 'lucide-react';
 import { copyWhatsAppTextToClipboard } from '../utils/exportImage';
 import {
@@ -53,6 +54,7 @@ interface HistoryViewProps {
   onSelectReport: (report: ReportData) => void;
   onDeleteReport: (id: string) => void;
   onDownloadReport?: (report: ReportData) => void;
+  onDownloadPdf?: (report: ReportData) => void;
 }
 
 export const HistoryView: React.FC<HistoryViewProps> = ({
@@ -60,6 +62,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
   onSelectReport,
   onDeleteReport,
   onDownloadReport,
+  onDownloadPdf,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStudentFilter, setSelectedStudentFilter] = useState<string>('all');
@@ -494,6 +497,17 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                         </>
                       )}
                     </button>
+
+                    {onDownloadPdf && (
+                      <button
+                        onClick={() => onDownloadPdf(item)}
+                        title="Unduh laporan ini sebagai berkas PDF resmi"
+                        className="px-2.5 py-1 text-[11px] font-semibold bg-rose-700 hover:bg-rose-800 text-white rounded-lg transition-all flex items-center gap-1 shadow-2xs"
+                      >
+                        <FileText className="w-3 h-3 text-white" />
+                        <span>Unduh PDF</span>
+                      </button>
+                    )}
 
                     {onDownloadReport && (
                       <button

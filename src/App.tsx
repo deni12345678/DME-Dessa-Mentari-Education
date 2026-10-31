@@ -15,6 +15,7 @@ import { BillingSummaryView } from './components/BillingSummaryView';
 import { PWAInstallModal } from './components/PWAInstallModal';
 import { 
   downloadReportAsImage, 
+  downloadReportAsPdf,
   copyWhatsAppTextToClipboard, 
   openWhatsAppDirect 
 } from './utils/exportImage';
@@ -45,7 +46,8 @@ import {
   Send,
   Cloud,
   X,
-  ExternalLink
+  ExternalLink,
+  FileText
 } from 'lucide-react';
 
 const DEFAULT_SETTINGS: TeacherSettings = {
@@ -266,6 +268,7 @@ export default function App() {
   });
 
   const [downloading, setDownloading] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [copiedSuccess, setCopiedSuccess] = useState(false);
   const [saveReportSuccess, setSaveReportSuccess] = useState(false);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
@@ -482,17 +485,55 @@ export default function App() {
       const ok = await downloadReportAsImage('report-card-container', filename, format);
       if (!ok) {
         // Fallback retry after small pause to ensure DOM & assets are settled
-        await new Promise((r) => setTimeout(r, 350));
+        await new Promise((r) => setTimeout(r, 400));
         const retryOk = await downloadReportAsImage('report-card-container', filename, format);
         if (!retryOk) {
-          alert('Gagal mengunduh gambar laporan. Pastikan koneksi stabil atau gunakan tombol "Cetak / Print Versi PDF".');
+          // Offer immediate PDF download as reliable fallback
+          const wantPdf = confirm('Gagal mengunduh gambar JPG. Apakah Anda ingin mengunduh versi PDF resmi sekarang?');
+          if (wantPdf) {
+            await handleDownloadPdf(activeReport);
+          }
         }
       }
     } catch (err) {
       console.error('Download handler error:', err);
-      alert('Gagal mengunduh gambar laporan. Silakan coba lagi.');
+      const wantPdf = confirm('Terjadi kendala saat memproses gambar. Ingin mencoba unduh berkas PDF?');
+      if (wantPdf) {
+        await handleDownloadPdf(targetReport || report);
+      }
     } finally {
       setDownloading(false);
+    }
+  };
+
+  const handleDownloadPdf = async (targetReport?: ReportData) => {
+    setDownloadingPdf(true);
+    try {
+      const activeReport = targetReport || report;
+
+      if (activeTab !== 'create') {
+        setActiveTab('create');
+        await new Promise((r) => setTimeout(r, 300));
+      }
+
+      const cleanStudent = (activeReport.namaSiswa || 'Siswa').trim().replace(/[^a-zA-Z0-9_-]/g, '_');
+      const cleanDate = (activeReport.tanggal || 'Laporan').trim().replace(/[^a-zA-Z0-9_-]/g, '_');
+      const filename = `Laporan_Les_${cleanStudent}_${cleanDate}`;
+
+      const ok = await downloadReportAsPdf('report-card-container', filename, activeReport);
+      if (!ok) {
+        // Fallback retry
+        await new Promise((r) => setTimeout(r, 400));
+        const retryOk = await downloadReportAsPdf('report-card-container', filename, activeReport);
+        if (!retryOk) {
+          window.print();
+        }
+      }
+    } catch (err) {
+      console.error('Download PDF error:', err);
+      window.print();
+    } finally {
+      setDownloadingPdf(false);
     }
   };
 
@@ -588,6 +629,8 @@ export default function App() {
         onTabChange={setActiveTab}
         onDownloadJpg={() => handleDownloadImage('jpg')}
         downloading={downloading}
+        onDownloadPdf={() => handleDownloadPdf()}
+        downloadingPdf={downloadingPdf}
         onCopyAdminLink={handleCopyAdminPortalLink}
         adminLinkCopied={adminLinkCopied}
         onOpenInstallModal={() => setIsInstallModalOpen(true)}
@@ -713,19 +756,31 @@ export default function App() {
                   </div>
 
                   {/* Primary Export Action Grid */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                    <button
+                      onClick={() => handleDownloadPdf()}
+                      disabled={downloadingPdf || downloading}
+                      className="px-3 py-2.5 bg-gradient-to-r from-rose-700 to-red-600 hover:from-rose-800 hover:to-red-700 text-white rounded-xl text-xs font-bold shadow-xs transition-all flex flex-col items-center justify-center gap-1 disabled:opacity-50 relative group"
+                    >
+                      <span className="absolute -top-1.5 right-1 px-1.5 py-0.2 bg-amber-300 text-amber-950 font-black text-[8px] rounded-full uppercase tracking-wider shadow-2xs">
+                        Rekomendasi
+                      </span>
+                      <FileText className="w-4 h-4 text-rose-200" />
+                      <span>{downloadingPdf ? 'Membuat...' : 'Unduh PDF'}</span>
+                    </button>
+
                     <button
                       onClick={() => handleDownloadImage('jpg')}
-                      disabled={downloading}
+                      disabled={downloading || downloadingPdf}
                       className="px-3 py-2.5 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white rounded-xl text-xs font-bold shadow-xs transition-all flex flex-col items-center justify-center gap-1 disabled:opacity-50"
                     >
                       <Download className="w-4 h-4 text-amber-200" />
-                      <span>Unduh JPG</span>
+                      <span>{downloading ? 'Mengunduh...' : 'Unduh JPG'}</span>
                     </button>
 
                     <button
                       onClick={() => handleDownloadImage('png')}
-                      disabled={downloading}
+                      disabled={downloading || downloadingPdf}
                       className="px-3 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-xs transition-all flex flex-col items-center justify-center gap-1 disabled:opacity-50"
                     >
                       <FileImage className="w-4 h-4 text-slate-300" />
@@ -744,7 +799,7 @@ export default function App() {
                       ) : (
                         <>
                           <Share2 className="w-4 h-4 text-emerald-200" />
-                          <span>Salin Teks WA</span>
+                          <span>Salin WA</span>
                         </>
                       )}
                     </button>
@@ -759,13 +814,14 @@ export default function App() {
                   </div>
 
                   {/* Print Action Secondary */}
-                  <div className="flex justify-end pt-1">
+                  <div className="flex items-center justify-between pt-1 text-[11px] text-slate-500">
+                    <span className="italic">💡 Rekomendasi: Gunakan <strong>Unduh PDF</strong> untuk hasil jernih dan anti-gagal di HP.</span>
                     <button
                       onClick={handlePrint}
-                      className="text-[11px] text-slate-500 hover:text-slate-800 font-semibold flex items-center gap-1"
+                      className="text-slate-500 hover:text-slate-800 font-semibold flex items-center gap-1 shrink-0 ml-2"
                     >
                       <Printer className="w-3.5 h-3.5" />
-                      <span>Cetak / Print Versi PDF</span>
+                      <span>Cetak Browser</span>
                     </button>
                   </div>
                 </div>
@@ -801,6 +857,13 @@ export default function App() {
               setActiveTab('create');
               setTimeout(() => {
                 handleDownloadImage('jpg', item);
+              }, 300);
+            }}
+            onDownloadPdf={(item) => {
+              setReport(item);
+              setActiveTab('create');
+              setTimeout(() => {
+                handleDownloadPdf(item);
               }, 300);
             }}
           />
@@ -857,26 +920,46 @@ export default function App() {
               <ReportCard report={directLinkReport} />
             </div>
 
-            <div className="flex items-center justify-between pt-2">
-              <button
-                onClick={() => {
-                  setReport(directLinkReport);
-                  setDirectLinkReport(null);
-                  setActiveTab('create');
-                  window.history.pushState({}, '', window.location.pathname);
-                }}
-                className="px-4 py-2 text-xs font-bold text-amber-900 bg-amber-100 hover:bg-amber-200 rounded-xl transition-all flex items-center gap-1.5"
-              >
-                <ExternalLink className="w-3.5 h-3.5" />
-                <span>Buka & Edit di Form</span>
-              </button>
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    setReport(directLinkReport);
+                    setDirectLinkReport(null);
+                    setActiveTab('create');
+                    window.history.pushState({}, '', window.location.pathname);
+                  }}
+                  className="px-3.5 py-2 text-xs font-bold text-amber-900 bg-amber-100 hover:bg-amber-200 rounded-xl transition-all flex items-center gap-1.5"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>Buka di Form</span>
+                </button>
+
+                <button
+                  onClick={() => handleDownloadPdf(directLinkReport)}
+                  disabled={downloadingPdf}
+                  className="px-3.5 py-2 text-xs font-bold text-white bg-rose-700 hover:bg-rose-800 rounded-xl transition-all flex items-center gap-1.5 shadow-2xs"
+                >
+                  <FileText className="w-3.5 h-3.5 text-rose-200" />
+                  <span>{downloadingPdf ? 'Membuat...' : 'Unduh PDF'}</span>
+                </button>
+
+                <button
+                  onClick={() => handleDownloadImage('jpg', directLinkReport)}
+                  disabled={downloading}
+                  className="px-3.5 py-2 text-xs font-bold text-white bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 rounded-xl transition-all flex items-center gap-1.5 shadow-2xs"
+                >
+                  <Download className="w-3.5 h-3.5 text-amber-200" />
+                  <span>Unduh JPG</span>
+                </button>
+              </div>
 
               <button
                 onClick={() => {
                   setDirectLinkReport(null);
                   window.history.pushState({}, '', window.location.pathname);
                 }}
-                className="px-4 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all"
+                className="px-3.5 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all"
               >
                 Tutup Pratinjau
               </button>

@@ -407,7 +407,7 @@ export const ReportCard: React.FC<ReportCardProps> = ({ report }) => {
                     <img
                       src={photo.url}
                       alt={photo.caption || `Foto Dokumentasi ${idx + 1}`}
-                      crossOrigin="anonymous"
+                      crossOrigin={photo.url?.startsWith('data:') ? undefined : 'anonymous'}
                       loading="eager"
                       className="w-full h-full object-cover"
                     />

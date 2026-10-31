@@ -1,5 +1,5 @@
 import React from 'react';
-import { Download, History, Settings, FilePlus, HelpCircle, Film, GraduationCap, Camera, DollarSign, Smartphone } from 'lucide-react';
+import { Download, History, Settings, FilePlus, HelpCircle, Film, GraduationCap, Camera, DollarSign, Smartphone, FileText } from 'lucide-react';
 
 export type ActiveTabType = 'create' | 'students' | 'photos' | 'billing' | 'video' | 'history' | 'settings' | 'guide';
 
@@ -8,6 +8,8 @@ interface HeaderProps {
   onTabChange: (tab: ActiveTabType) => void;
   onDownloadJpg: () => void;
   downloading: boolean;
+  onDownloadPdf?: () => void;
+  downloadingPdf?: boolean;
   isCloudConnected?: boolean;
   onCopyAdminLink?: () => void;
   adminLinkCopied?: boolean;
@@ -22,6 +24,8 @@ export const Header: React.FC<HeaderProps> = ({
   onTabChange,
   onDownloadJpg,
   downloading,
+  onDownloadPdf,
+  downloadingPdf = false,
   isCloudConnected = true,
   onCopyAdminLink,
   adminLinkCopied = false,
@@ -211,12 +215,24 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           )}
 
+          {onDownloadPdf && (
+            <button
+              onClick={onDownloadPdf}
+              disabled={downloadingPdf || downloading}
+              title="Unduh Laporan sebagai Berkas PDF Resmi"
+              className="px-3.5 py-2 text-xs font-bold text-white bg-rose-700 hover:bg-rose-800 active:scale-95 rounded-xl shadow-xs transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 disabled:opacity-50"
+            >
+              <FileText className="w-3.5 h-3.5 text-rose-200" />
+              <span>{downloadingPdf ? 'Membuat PDF...' : 'Unduh PDF'}</span>
+            </button>
+          )}
+
           <button
             onClick={onDownloadJpg}
-            disabled={downloading}
-            className="px-4 py-2 text-xs font-bold text-white bg-gradient-to-r from-amber-600 to-orange-600 rounded-xl hover:from-amber-700 hover:to-orange-700 active:scale-95 shadow-xs transition-all flex items-center gap-2 whitespace-nowrap shrink-0 disabled:opacity-50"
+            disabled={downloading || downloadingPdf}
+            className="px-3.5 py-2 text-xs font-bold text-white bg-gradient-to-r from-amber-600 to-orange-600 rounded-xl hover:from-amber-700 hover:to-orange-700 active:scale-95 shadow-xs transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 disabled:opacity-50"
           >
-            <Download className="w-4 h-4 text-amber-200" />
+            <Download className="w-3.5 h-3.5 text-amber-200" />
             <span>{downloading ? 'Mengunduh...' : 'Unduh Gambar (JPG)'}</span>
           </button>
         </div>
