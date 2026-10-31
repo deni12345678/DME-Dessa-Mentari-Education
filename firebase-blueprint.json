@@ -1,0 +1,97 @@
+{
+  "entities": {
+    "Report": {
+      "title": "Laporan Pembelajaran Les Privat",
+      "description": "Laporan perkembangan belajar siswa per sesi les privat",
+      "type": "object",
+      "properties": {
+        "namaSiswa": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Nama lengkap siswa"
+        },
+        "tanggal": {
+          "type": "string",
+          "description": "Tanggal pelaksanaan les (YYYY-MM-DD)"
+        },
+        "jenjang": {
+          "type": "string",
+          "enum": ["PAUD/TK", "SD", "SMP", "SMA", "Umum"],
+          "description": "Jenjang pendidikan siswa"
+        },
+        "mataPelajaran": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Mata pelajaran les"
+        },
+        "materi": {
+          "type": "string",
+          "maxLength": 2000,
+          "description": "Materi yang dipelajari hari ini"
+        },
+        "perkembangan": {
+          "type": "string",
+          "maxLength": 2000,
+          "description": "Catatan evaluasi perkembangan dan keaktifan siswa"
+        },
+        "tugasRumah": {
+          "type": "string",
+          "maxLength": 1000,
+          "description": "Tugas rumah atau PR"
+        },
+        "catatanOrtu": {
+          "type": "string",
+          "maxLength": 1000,
+          "description": "Pesan khusus untuk orang tua"
+        },
+        "namaPengajar": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Nama pengajar / tentor"
+        },
+        "skorPemahaman": {
+          "type": "number",
+          "description": "Skor pemahaman siswa 0-100"
+        },
+        "skorKeaktifan": {
+          "type": "number",
+          "description": "Skor keaktifan siswa 0-100"
+        },
+        "skorFokus": {
+          "type": "number",
+          "description": "Skor fokus siswa 0-100"
+        },
+        "tema": {
+          "type": "string",
+          "enum": ["solar", "emerald", "navy", "pastel", "dark"],
+          "description": "Tema tampilan kartu laporan"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Waktu pembuatan laporan"
+        }
+      },
+      "required": [
+        "namaSiswa",
+        "tanggal",
+        "jenjang",
+        "mataPelajaran",
+        "materi",
+        "perkembangan",
+        "namaPengajar",
+        "skorPemahaman",
+        "skorKeaktifan",
+        "skorFokus",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/reports/{reportId}": {
+      "schema": {
+        "$ref": "#/entities/Report"
+      },
+      "description": "Koleksi seluruh laporan pembelajaran yang dapat diakses oleh Admin dan Pengajar"
+    }
+  }
+}

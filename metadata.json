@@ -1,0 +1,6 @@
+{
+  "name": "Dessa Mentari Education - Generator Laporan Les Privat",
+  "description": "Aplikasi pembuatan Laporan Pembelajaran Les Privat resmi Dessa Mentari Education dengan fitur AI penyusun evaluasi, tema kartu elegan, dan ekspor JPG/PNG siap kirim WhatsApp.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
