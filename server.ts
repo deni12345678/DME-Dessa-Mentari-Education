@@ -154,13 +154,40 @@ async function startServer() {
 <html lang="id">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
     <title>Dessa Mentari Education - Generator Laporan Les Privat</title>
-    <meta name="description" content="Aplikasi pembuatan Laporan Pembelajaran Les Privat resmi Dessa Mentari Education dengan fitur AI Video Studio, AI penyusun evaluasi, tema kartu elegan, dan ekspor JPG/PNG siap kirim WhatsApp." />
-    <meta property="og:title" content="Dessa Mentari Education - Generator Laporan Les Privat" />
-    <meta property="og:description" content="Aplikasi pembuatan Laporan Pembelajaran Les Privat resmi Dessa Mentari Education dengan fitur AI Video Studio, AI penyusun evaluasi, tema kartu elegan, dan ekspor JPG/PNG siap kirim WhatsApp." />
+    <meta name="description" content="Aplikasi resmi Dessa Mentari Education: Pembuatan Laporan Pembelajaran Les Privat, Dokumentasi Foto, AI Video Studio, dan Rekapan Sesi Les Privat Keluarga Indonesia." />
+
+    <!-- Open Graph / WhatsApp / Facebook Share Previews with Official Logo -->
+    <meta property="og:title" content="Dessa Mentari Education - Les Privat Keluarga Indonesia" />
+    <meta property="og:description" content="Portal resmi Laporan Pembelajaran, Dokumentasi Belajar, AI Video Studio, dan Rekapan Sesi Les Privat Keluarga Indonesia." />
+    <meta property="og:image" content="/assets/aistudio/Logo_Pendidikan_Dessa_Mentari_6f1f1e2d.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
     <meta property="og:type" content="website" />
+
+    <!-- Twitter Card Previews -->
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Dessa Mentari Education - Les Privat Keluarga Indonesia" />
+    <meta name="twitter:description" content="Portal resmi Laporan Pembelajaran, Dokumentasi Belajar, AI Video Studio, dan Rekapan Sesi Les Privat Keluarga Indonesia." />
+    <meta name="twitter:image" content="/assets/aistudio/Logo_Pendidikan_Dessa_Mentari_6f1f1e2d.png" />
+
+    <!-- App Favicon & PWA Icons -->
+    <link rel="icon" type="image/png" href="/assets/aistudio/Logo_Pendidikan_Dessa_Mentari_6f1f1e2d.png" />
+    <link rel="shortcut icon" href="/assets/aistudio/Logo_Pendidikan_Dessa_Mentari_6f1f1e2d.png" />
+    <link rel="apple-touch-icon" href="/pwa-192x192.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="/pwa-192x192.png" />
+    <link rel="apple-touch-icon" sizes="512x512" href="/pwa-512x512.png" />
+
+    <!-- PWA Web App Manifest -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#b45309" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Dessa Mentari" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">

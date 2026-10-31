@@ -12,6 +12,7 @@ import { StatsSummaryPanel } from './components/StatsSummaryPanel';
 import { StudentManagementView } from './components/StudentManagementView';
 import { PhotoGalleryView } from './components/PhotoGalleryView';
 import { BillingSummaryView } from './components/BillingSummaryView';
+import { PWAInstallModal } from './components/PWAInstallModal';
 import { 
   downloadReportAsImage, 
   copyWhatsAppTextToClipboard, 
@@ -268,6 +269,10 @@ export default function App() {
   const [copiedSuccess, setCopiedSuccess] = useState(false);
   const [saveReportSuccess, setSaveReportSuccess] = useState(false);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
+  const [showInstallBanner, setShowInstallBanner] = useState(() => {
+    return localStorage.getItem('dme_hide_install_banner') !== 'true';
+  });
   const [adminLinkCopied, setAdminLinkCopied] = useState(false);
   const [directLinkReport, setDirectLinkReport] = useState<ReportData | null>(null);
   const [isCloudSyncing, setIsCloudSyncing] = useState(true);
@@ -579,10 +584,43 @@ export default function App() {
         downloading={downloading}
         onCopyAdminLink={handleCopyAdminPortalLink}
         adminLinkCopied={adminLinkCopied}
+        onOpenInstallModal={() => setIsInstallModalOpen(true)}
         studentsCount={students.length}
         photosCount={totalPhotosCount}
         unpaidCount={unpaidBillingsCount}
       />
+
+      {/* PWA INSTALL BANNER */}
+      {showInstallBanner && (
+        <div className="bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 text-white px-4 py-2.5 text-xs shadow-xs no-print">
+          <div className="max-w-7xl mx-auto w-full flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <span className="text-base">📱</span>
+              <span className="font-medium">
+                <strong>Tempel di Layar HP:</strong> Pasang aplikasi Dessa Mentari Education langsung di layar utama smartphone Anda dengan logo resmi untuk akses cepat tanpa perlu mengetik alamat link.
+              </span>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => setIsInstallModalOpen(true)}
+                className="px-3 py-1 bg-white text-amber-950 font-extrabold rounded-lg hover:bg-amber-50 active:scale-95 transition-all text-[11px] shadow-2xs whitespace-nowrap"
+              >
+                Pasang Sekarang
+              </button>
+              <button
+                onClick={() => {
+                  setShowInstallBanner(false);
+                  localStorage.setItem('dme_hide_install_banner', 'true');
+                }}
+                className="p-1 hover:bg-white/20 rounded-md transition-colors text-white/80 hover:text-white"
+                title="Tutup pemberitahuan"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MAIN CONTAINER */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
@@ -858,6 +896,12 @@ export default function App() {
             ...(aiData.catatanOrangTua ? { catatanOrangTua: aiData.catatanOrangTua } : {}),
           });
         }}
+      />
+
+      {/* PWA INSTALL / TEMPEL DI LAYAR HP MODAL */}
+      <PWAInstallModal
+        isOpen={isInstallModalOpen}
+        onClose={() => setIsInstallModalOpen(false)}
       />
 
       {/* FOOTER */}

@@ -83,6 +83,20 @@ export const GuideView: React.FC = () => {
             </p>
           </div>
         </div>
+
+        {/* Step 6 */}
+        <div className="flex gap-4">
+          <div className="w-7 h-7 rounded-full bg-orange-100 text-orange-900 font-bold flex items-center justify-center shrink-0 text-xs">
+            6
+          </div>
+          <div className="space-y-1">
+            <h3 className="font-bold text-slate-900 text-sm">Tempel Aplikasi di Layar HP (PWA) & Tampilan Link Berlogo</h3>
+            <p>
+              <b>1. Tempel di Layar HP:</b> Ketuk tombol <b>"📱 Tempel di Layar HP"</b> pada bagian atas menu. Di Android / Chrome, tekan "Pasang Sekarang". Di iPhone / Safari, ketuk tombol <i>Share</i> ⎋ lalu pilih <i>"Tambahkan ke Layar Utama"</i> ➕. Aplikasi akan langsung muncul di halaman beranda smartphone Anda layaknya aplikasi resmi Play Store / App Store dengan logo Dessa Mentari Education.<br />
+              <b>2. Pratinjau Link Berlogo:</b> Saat Anda membagikan tautan portal ini ke WhatsApp, Telegram, atau Media Sosial, logo resmi Dessa Mentari Education dan deskripsi lembaga akan otomatis muncul rapi di kartu pratinjau pesan (OpenGraph Card).
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Quote Banner */}

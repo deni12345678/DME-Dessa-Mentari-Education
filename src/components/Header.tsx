@@ -1,5 +1,5 @@
 import React from 'react';
-import { Download, History, Settings, FilePlus, HelpCircle, Film, GraduationCap, Camera, DollarSign } from 'lucide-react';
+import { Download, History, Settings, FilePlus, HelpCircle, Film, GraduationCap, Camera, DollarSign, Smartphone } from 'lucide-react';
 
 export type ActiveTabType = 'create' | 'students' | 'photos' | 'billing' | 'video' | 'history' | 'settings' | 'guide';
 
@@ -11,6 +11,7 @@ interface HeaderProps {
   isCloudConnected?: boolean;
   onCopyAdminLink?: () => void;
   adminLinkCopied?: boolean;
+  onOpenInstallModal?: () => void;
   studentsCount?: number;
   photosCount?: number;
   unpaidCount?: number;
@@ -24,6 +25,7 @@ export const Header: React.FC<HeaderProps> = ({
   isCloudConnected = true,
   onCopyAdminLink,
   adminLinkCopied = false,
+  onOpenInstallModal,
   studentsCount,
   photosCount,
   unpaidCount,
@@ -185,8 +187,20 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
         </nav>
 
-        {/* Zone 3: Actions (Link Admin & Unduh JPG) */}
+        {/* Zone 3: Actions (Pasang HP, Link Admin & Unduh JPG) */}
         <div className="flex items-center gap-2 shrink-0">
+          {onOpenInstallModal && (
+            <button
+              onClick={onOpenInstallModal}
+              title="Pasang / Tempel Aplikasi di Layar HP"
+              className="px-3 py-2 text-xs font-bold text-amber-950 bg-amber-50 hover:bg-amber-100 border border-amber-300 rounded-xl transition-all flex items-center gap-1.5 shadow-2xs whitespace-nowrap shrink-0"
+            >
+              <Smartphone className="w-3.5 h-3.5 text-amber-600" />
+              <span className="hidden lg:inline">📱 Tempel di Layar HP</span>
+              <span className="lg:hidden">📱 Tempel di HP</span>
+            </button>
+          )}
+
           {onCopyAdminLink && (
             <button
               onClick={onCopyAdminLink}
@@ -209,10 +223,19 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       {/* Mobile Tab Navigation Bar */}
-      <div className="md:hidden flex items-center justify-around border-t border-slate-200 bg-slate-50 py-2 px-3 text-[11px] font-semibold overflow-x-auto">
+      <div className="md:hidden flex items-center justify-around border-t border-slate-200 bg-slate-50 py-2 px-3 text-[11px] font-semibold overflow-x-auto gap-1">
+        {onOpenInstallModal && (
+          <button
+            onClick={onOpenInstallModal}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap bg-amber-500 text-white font-bold shadow-2xs shrink-0"
+          >
+            <Smartphone className="w-3.5 h-3.5" />
+            <span>📱 Tempel di HP</span>
+          </button>
+        )}
         <button
           onClick={() => onTabChange('create')}
-          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap ${
+          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap shrink-0 ${
             activeTab === 'create' ? 'bg-amber-100 text-amber-900 font-bold' : 'text-slate-600'
           }`}
         >
@@ -221,7 +244,7 @@ export const Header: React.FC<HeaderProps> = ({
         </button>
         <button
           onClick={() => onTabChange('students')}
-          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap ${
+          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap shrink-0 ${
             activeTab === 'students' ? 'bg-amber-100 text-amber-900 font-bold' : 'text-slate-600'
           }`}
         >
@@ -230,7 +253,7 @@ export const Header: React.FC<HeaderProps> = ({
         </button>
         <button
           onClick={() => onTabChange('billing')}
-          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap ${
+          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap shrink-0 ${
             activeTab === 'billing' ? 'bg-emerald-100 text-emerald-900 font-bold' : 'text-slate-600'
           }`}
         >
@@ -239,7 +262,7 @@ export const Header: React.FC<HeaderProps> = ({
         </button>
         <button
           onClick={() => onTabChange('photos')}
-          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap ${
+          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap shrink-0 ${
             activeTab === 'photos' ? 'bg-amber-100 text-amber-900 font-bold' : 'text-slate-600'
           }`}
         >
@@ -248,7 +271,7 @@ export const Header: React.FC<HeaderProps> = ({
         </button>
         <button
           onClick={() => onTabChange('video')}
-          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap ${
+          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap shrink-0 ${
             activeTab === 'video' ? 'bg-amber-100 text-amber-900 font-bold' : 'text-slate-600'
           }`}
         >
@@ -257,7 +280,7 @@ export const Header: React.FC<HeaderProps> = ({
         </button>
         <button
           onClick={() => onTabChange('history')}
-          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap ${
+          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap shrink-0 ${
             activeTab === 'history' ? 'bg-amber-100 text-amber-900 font-bold' : 'text-slate-600'
           }`}
         >
@@ -266,7 +289,7 @@ export const Header: React.FC<HeaderProps> = ({
         </button>
         <button
           onClick={() => onTabChange('settings')}
-          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap ${
+          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap shrink-0 ${
             activeTab === 'settings' ? 'bg-amber-100 text-amber-900 font-bold' : 'text-slate-600'
           }`}
         >
@@ -275,7 +298,7 @@ export const Header: React.FC<HeaderProps> = ({
         </button>
         <button
           onClick={() => onTabChange('guide')}
-          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap ${
+          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap shrink-0 ${
             activeTab === 'guide' ? 'bg-amber-100 text-amber-900 font-bold' : 'text-slate-600'
           }`}
         >
