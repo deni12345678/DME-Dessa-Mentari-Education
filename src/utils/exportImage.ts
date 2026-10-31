@@ -1,67 +1,86 @@
 import { ReportData } from '../types/report';
-import { captureElementToCanvas, downloadReportAsPdf } from './exportPdf';
+import { captureElementToCanvas, downloadReportAsPdf, buildReportFilename } from './exportPdf';
 
-export { downloadReportAsPdf, captureElementToCanvas };
+export { downloadReportAsPdf, captureElementToCanvas, buildReportFilename };
+
+export interface ImageExportResult {
+  success: boolean;
+  filename: string;
+  format: 'jpg' | 'png';
+  dataUrl?: string;
+  blobUrl?: string;
+  blob?: Blob;
+  error?: string;
+}
 
 /**
- * Downloads the specified DOM element as a high-resolution JPG or PNG image.
- * Uses optimized blob generation for instant, fluid mobile download.
+ * Robustly downloads the specified element as JPG or PNG.
+ * Filename is customized strictly according to the student's name and session date.
  */
 export async function downloadReportAsImage(
   elementId: string,
-  filename: string,
+  report: ReportData,
   format: 'jpg' | 'png' = 'jpg'
-): Promise<boolean> {
+): Promise<ImageExportResult> {
   const mimeType = format === 'jpg' ? 'image/jpeg' : 'image/png';
   const quality = format === 'jpg' ? 0.95 : undefined;
   const isJpg = format === 'jpg';
+  const finalFilename = buildReportFilename(report, format);
 
   try {
     const canvas = await captureElementToCanvas(elementId, isJpg ? '#ffffff' : 'transparent');
     if (!canvas) {
       console.error(`Failed to capture canvas for element #${elementId}`);
-      return false;
+      return { 
+        success: false, 
+        filename: finalFilename, 
+        format, 
+        error: 'Gagal mengambil gambar canvas. Periksa koneksi dan elemen.' 
+      };
     }
 
-    const safeFilename = filename.replace(/[^a-zA-Z0-9_-]/g, '_');
-    const finalName = `${safeFilename}.${format}`;
+    let exportedBlob: Blob | undefined;
+    let blobUrl: string | undefined;
+    let dataUrl: string | undefined;
 
-    // Modern Blob download (avoids heavy string memory allocation on mobile devices)
+    // 1. Try to produce Blob
     if (canvas.toBlob) {
       try {
-        const blob = await new Promise<Blob | null>((resolve) => {
+        const b = await new Promise<Blob | null>((resolve) => {
           canvas.toBlob(resolve, mimeType, quality);
         });
-
-        if (blob) {
-          const blobUrl = URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.download = finalName;
-          link.href = blobUrl;
-          link.style.display = 'none';
-          document.body.appendChild(link);
-          link.click();
-
-          setTimeout(() => {
-            if (link.parentNode) {
-              document.body.removeChild(link);
-            }
-            URL.revokeObjectURL(blobUrl);
-          }, 1000);
-
-          return true;
+        if (b) {
+          exportedBlob = b;
+          blobUrl = URL.createObjectURL(b);
         }
       } catch (blobErr) {
-        console.warn('Blob export failed, trying dataURL:', blobErr);
+        console.warn('toBlob conversion encountered error:', blobErr);
       }
     }
 
-    // Direct dataURL fallback
+    // 2. Try to produce DataURL
     try {
-      const dataUrl = canvas.toDataURL(mimeType, quality);
+      dataUrl = canvas.toDataURL(mimeType, quality);
+    } catch (dataUrlErr) {
+      console.warn('toDataURL conversion encountered error:', dataUrlErr);
+    }
+
+    const downloadTargetUrl = blobUrl || dataUrl;
+    if (!downloadTargetUrl) {
+      return {
+        success: false,
+        filename: finalFilename,
+        format,
+        error: 'Tidak dapat menghasilkan berkas gambar dari canvas.',
+      };
+    }
+
+    // 3. Trigger programmatic download
+    try {
       const link = document.createElement('a');
-      link.download = finalName;
-      link.href = dataUrl;
+      link.download = finalFilename;
+      link.href = downloadTargetUrl;
+      link.setAttribute('download', finalFilename);
       link.style.display = 'none';
       document.body.appendChild(link);
       link.click();
@@ -71,16 +90,54 @@ export async function downloadReportAsImage(
           document.body.removeChild(link);
         }
       }, 1000);
-
-      return true;
-    } catch (dataUrlErr) {
-      console.error('DataURL export failed:', dataUrlErr);
-      return false;
+    } catch (clickErr) {
+      console.warn('Direct link click download triggered warning:', clickErr);
     }
-  } catch (err) {
+
+    return {
+      success: true,
+      filename: finalFilename,
+      format,
+      dataUrl,
+      blobUrl,
+      blob: exportedBlob,
+    };
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
     console.error('Error generating image:', err);
-    return false;
+    return {
+      success: false,
+      filename: finalFilename,
+      format,
+      error: errorMsg,
+    };
   }
+}
+
+/**
+ * Triggers native mobile sharing (WhatsApp, Google Photos, Files) if supported.
+ */
+export async function shareReportFile(
+  blob: Blob,
+  filename: string,
+  title = 'Laporan Pembelajaran Les Privat'
+): Promise<boolean> {
+  if (typeof navigator !== 'undefined' && navigator.canShare) {
+    try {
+      const file = new File([blob], filename, { type: blob.type });
+      if (navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title,
+          text: `Berikut adalah berkas ${filename} dari Dessa Mentari Education.`,
+        });
+        return true;
+      }
+    } catch (err) {
+      console.warn('Web Share API aborted or failed:', err);
+    }
+  }
+  return false;
 }
 
 /**

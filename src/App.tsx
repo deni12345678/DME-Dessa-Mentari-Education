@@ -16,6 +16,8 @@ import { PWAInstallModal } from './components/PWAInstallModal';
 import { 
   downloadReportAsImage, 
   downloadReportAsPdf,
+  shareReportFile,
+  buildReportFilename,
   copyWhatsAppTextToClipboard, 
   openWhatsAppDirect 
 } from './utils/exportImage';
@@ -49,7 +51,9 @@ import {
   ExternalLink,
   FileText,
   Loader2,
-  Sparkles
+  Sparkles,
+  CheckCircle2,
+  AlertCircle
 } from 'lucide-react';
 
 const DEFAULT_SETTINGS: TeacherSettings = {
@@ -271,6 +275,18 @@ export default function App() {
 
   const [downloading, setDownloading] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [downloadNotice, setDownloadNotice] = useState<{
+    type: 'success' | 'error';
+    title: string;
+    message: string;
+    filename?: string;
+  } | null>(null);
+  const [imagePreviewModal, setImagePreviewModal] = useState<{
+    url: string;
+    filename: string;
+    format: 'jpg' | 'png';
+    blob?: Blob;
+  } | null>(null);
   const [copiedSuccess, setCopiedSuccess] = useState(false);
   const [saveReportSuccess, setSaveReportSuccess] = useState(false);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
@@ -375,6 +391,16 @@ export default function App() {
     }
   }, [savedReports]);
 
+  // Auto-dismiss downloadNotice after 7 seconds
+  useEffect(() => {
+    if (downloadNotice) {
+      const timer = setTimeout(() => {
+        setDownloadNotice(null);
+      }, 7000);
+      return () => clearTimeout(timer);
+    }
+  }, [downloadNotice]);
+
   // Sync settings to localStorage
   useEffect(() => {
     localStorage.setItem('dme_teacher_settings', JSON.stringify(settings));
@@ -474,35 +500,46 @@ export default function App() {
     try {
       const activeReport = targetReport || report;
 
-      // If user is currently on another tab, switch to 'create' tab so the card is rendered in the DOM
       if (activeTab !== 'create') {
         setActiveTab('create');
-        await new Promise((r) => setTimeout(r, 300));
+        await new Promise((r) => setTimeout(r, 350));
       }
 
-      const cleanStudent = (activeReport.namaSiswa || 'Siswa').trim().replace(/[^a-zA-Z0-9_-]/g, '_');
-      const cleanDate = (activeReport.tanggal || 'Laporan').trim().replace(/[^a-zA-Z0-9_-]/g, '_');
-      const filename = `Laporan_Les_${cleanStudent}_${cleanDate}`;
+      const result = await downloadReportAsImage('report-card-container', activeReport, format);
 
-      const ok = await downloadReportAsImage('report-card-container', filename, format);
-      if (!ok) {
-        // Fallback retry after small pause to ensure DOM & assets are settled
-        await new Promise((r) => setTimeout(r, 400));
-        const retryOk = await downloadReportAsImage('report-card-container', filename, format);
-        if (!retryOk) {
-          // Offer immediate PDF download as reliable fallback
-          const wantPdf = confirm('Gagal mengunduh gambar JPG. Apakah Anda ingin mengunduh versi PDF resmi sekarang?');
-          if (wantPdf) {
-            await handleDownloadPdf(activeReport);
-          }
+      if (result.success) {
+        setDownloadNotice({
+          type: 'success',
+          title: `Berhasil Mengunduh ${format.toUpperCase()}!`,
+          message: `Berkas ${result.filename} berhasil disimpan. Anda juga dapat melihat pratinjau di bawah ini untuk menyimpan langsung ke galeri HP.`,
+          filename: result.filename,
+        });
+
+        // Open image preview modal so user can view/long-press save/share to WhatsApp directly
+        if (result.blobUrl || result.dataUrl) {
+          setImagePreviewModal({
+            url: result.blobUrl || result.dataUrl!,
+            filename: result.filename,
+            format,
+            blob: result.blob,
+          });
         }
+      } else {
+        setDownloadNotice({
+          type: 'error',
+          title: `Gagal Mengunduh ${format.toUpperCase()}`,
+          message: result.error || 'Terjadi kendala saat merender gambar. Silakan gunakan opsi Unduh PDF (1 Lembar Pas).',
+          filename: result.filename,
+        });
       }
-    } catch (err) {
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
       console.error('Download handler error:', err);
-      const wantPdf = confirm('Terjadi kendala saat memproses gambar. Ingin mencoba unduh berkas PDF?');
-      if (wantPdf) {
-        await handleDownloadPdf(targetReport || report);
-      }
+      setDownloadNotice({
+        type: 'error',
+        title: 'Gagal Memproses Gambar',
+        message: `Terjadi kendala: ${errorMsg}. Silakan coba opsi Unduh PDF.`,
+      });
     } finally {
       setDownloading(false);
     }
@@ -515,25 +552,34 @@ export default function App() {
 
       if (activeTab !== 'create') {
         setActiveTab('create');
-        await new Promise((r) => setTimeout(r, 300));
+        await new Promise((r) => setTimeout(r, 350));
       }
 
-      const cleanStudent = (activeReport.namaSiswa || 'Siswa').trim().replace(/[^a-zA-Z0-9_-]/g, '_');
-      const cleanDate = (activeReport.tanggal || 'Laporan').trim().replace(/[^a-zA-Z0-9_-]/g, '_');
-      const filename = `Laporan_Les_${cleanStudent}_${cleanDate}`;
+      const result = await downloadReportAsPdf('report-card-container', activeReport);
 
-      const ok = await downloadReportAsPdf('report-card-container', filename, activeReport);
-      if (!ok) {
-        // Fallback retry
-        await new Promise((r) => setTimeout(r, 400));
-        const retryOk = await downloadReportAsPdf('report-card-container', filename, activeReport);
-        if (!retryOk) {
-          window.print();
-        }
+      if (result.success) {
+        setDownloadNotice({
+          type: 'success',
+          title: 'Berhasil Mengunduh PDF (1 Lembar Pas)!',
+          message: `Dokumen resmi ${result.filename} berhasil disimpan ke folder Download perangkat Anda.`,
+          filename: result.filename,
+        });
+      } else {
+        setDownloadNotice({
+          type: 'error',
+          title: 'Gagal Mengunduh PDF',
+          message: result.error || 'Gagal menyusun PDF. Silakan gunakan menu Cetak Browser.',
+          filename: result.filename,
+        });
       }
-    } catch (err) {
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
       console.error('Download PDF error:', err);
-      window.print();
+      setDownloadNotice({
+        type: 'error',
+        title: 'Gagal Mengunduh PDF',
+        message: `Terjadi kendala: ${errorMsg}. Silakan gunakan menu Cetak Browser.`,
+      });
     } finally {
       setDownloadingPdf(false);
     }
@@ -1016,6 +1062,124 @@ export default function App() {
             <span className="text-[10px] text-slate-400 block pt-1">
               Mohon tunggu beberapa detik...
             </span>
+          </div>
+        </div>
+      )}
+
+      {/* DOWNLOAD RESULT NOTIFICATION TOAST (BERHASIL / GAGAL) */}
+      {downloadNotice && (
+        <div className="fixed bottom-6 right-4 sm:right-6 z-50 max-w-md w-full animate-in fade-in slide-in-from-bottom-5 duration-300">
+          <div className={`p-4 rounded-2xl shadow-2xl border flex items-start gap-3 backdrop-blur-md ${
+            downloadNotice.type === 'success'
+              ? 'bg-emerald-950/95 border-emerald-500 text-white'
+              : 'bg-rose-950/95 border-rose-500 text-white'
+          }`}>
+            <div className={`p-2 rounded-xl shrink-0 ${
+              downloadNotice.type === 'success' ? 'bg-emerald-600/30 text-emerald-400' : 'bg-rose-600/30 text-rose-400'
+            }`}>
+              {downloadNotice.type === 'success' ? (
+                <CheckCircle2 className="w-5 h-5" />
+              ) : (
+                <AlertCircle className="w-5 h-5" />
+              )}
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <h5 className="text-sm font-bold tracking-tight">
+                {downloadNotice.title}
+              </h5>
+              <p className="text-xs text-slate-200 mt-0.5 leading-relaxed">
+                {downloadNotice.message}
+              </p>
+              {downloadNotice.filename && (
+                <div className="mt-2 inline-block px-2.5 py-1 rounded-lg bg-black/40 border border-white/20 text-[11px] font-mono font-medium text-amber-200 truncate max-w-full">
+                  📄 {downloadNotice.filename}
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={() => setDownloadNotice(null)}
+              className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL PRATINJAU & SIMPAN GAMBAR JPG/PNG UNTUK HP */}
+      {imagePreviewModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-4 sm:p-6 shadow-2xl space-y-4 my-auto border border-amber-300 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <FileImage className="w-5 h-5 text-amber-600" />
+                <div>
+                  <h3 className="text-sm sm:text-base font-extrabold text-slate-900 font-serif-brand">
+                    Laporan Gambar Siap ({imagePreviewModal.format.toUpperCase()})
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    Nama file: {imagePreviewModal.filename}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setImagePreviewModal(null)}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Gambar Preview */}
+            <div className="bg-slate-100 rounded-xl p-2 border border-slate-200 max-h-[50vh] overflow-y-auto flex justify-center">
+              <img
+                src={imagePreviewModal.url}
+                alt="Pratinjau Laporan"
+                className="rounded-lg shadow-sm max-w-full h-auto object-contain"
+              />
+            </div>
+
+            {/* Petunjuk Pengguna HP */}
+            <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-[11px] text-amber-900 leading-relaxed">
+              💡 <strong>Tips Simpan di HP:</strong> Jika unduhan otomatis tidak muncul di galeri, Anda bisa <strong>tekan dan tahan (long-press) gambar di atas</strong> lalu pilih <em>"Download gambar"</em> atau <em>"Simpan ke Galeri"</em>.
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-wrap items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              {imagePreviewModal.blob && typeof navigator !== 'undefined' && 'share' in navigator && (
+                <button
+                  onClick={() => {
+                    if (imagePreviewModal.blob) {
+                      shareReportFile(imagePreviewModal.blob, imagePreviewModal.filename);
+                    }
+                  }}
+                  className="px-3.5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition-all flex items-center gap-1.5 shadow-2xs"
+                >
+                  <Share2 className="w-3.5 h-3.5 text-emerald-200" />
+                  <span>Kirim ke WhatsApp / Galeri</span>
+                </button>
+              )}
+
+              <a
+                href={imagePreviewModal.url}
+                download={imagePreviewModal.filename}
+                target="_blank"
+                rel="noreferrer"
+                className="px-3.5 py-2 text-xs font-bold text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all flex items-center gap-1.5 border border-slate-300"
+              >
+                <Download className="w-3.5 h-3.5 text-slate-600" />
+                <span>Unduh Ulang</span>
+              </a>
+
+              <button
+                onClick={() => setImagePreviewModal(null)}
+                className="px-4 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition-all"
+              >
+                Selesai
+              </button>
+            </div>
           </div>
         </div>
       )}

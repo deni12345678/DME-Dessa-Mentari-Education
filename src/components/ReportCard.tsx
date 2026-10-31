@@ -241,7 +241,7 @@ export const ReportCard: React.FC<ReportCardProps> = ({ report }) => {
       </div>
 
       {/* BODY CONTENT - STRUCTURED ACADEMIC DOSSIER */}
-      <div className={`p-4 sm:p-5 space-y-4 ${isDark ? 'bg-zinc-900 text-zinc-100' : 'bg-slate-50/50 text-slate-800'}`}>
+      <div className={`p-3 sm:p-4 space-y-3 ${isDark ? 'bg-zinc-900 text-zinc-100' : 'bg-slate-50/50 text-slate-800'}`}>
 
         {/* ACADEMIC DOSSIER TABLE (IDENTITAS SISWA & SESI) */}
         <div className={`rounded-xl border shadow-xs overflow-hidden ${isDark ? 'border-amber-500/30 bg-zinc-850' : 'border-slate-200 bg-white'}`}>
