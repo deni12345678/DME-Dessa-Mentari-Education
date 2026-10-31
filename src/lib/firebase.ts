@@ -11,7 +11,7 @@ import {
   orderBy
 } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
-import { ReportData, StudentData } from '../types/report';
+import { ReportData, StudentData, PhotoItem } from '../types/report';
 
 const app = initializeApp(firebaseConfig);
 
@@ -57,6 +57,7 @@ export async function testConnection() {
 
 const REPORTS_COLLECTION = 'reports';
 const STUDENTS_COLLECTION = 'students';
+const PHOTOS_COLLECTION = 'photos';
 
 // Save or update report in cloud
 export async function saveReportToCloud(report: ReportData): Promise<void> {
@@ -66,7 +67,10 @@ export async function saveReportToCloud(report: ReportData): Promise<void> {
       namaSiswa: report.namaSiswa || '',
       tanggal: report.tanggal || '',
       jenjang: report.jenjang || 'SD',
+      kelasGrade: report.kelasGrade || '',
+      waktuDurasi: report.waktuDurasi || '',
       mataPelajaran: report.mataPelajaran || '',
+      statusKehadiran: report.statusKehadiran || 'Hadir',
       materi: report.materiDipelajari || '',
       perkembangan: report.evaluasiSiswa || '',
       tugasRumah: report.tugasRumah || '',
@@ -75,6 +79,7 @@ export async function saveReportToCloud(report: ReportData): Promise<void> {
       skorPemahaman: Number(report.skorPemahaman) || 80,
       skorKeaktifan: Number(report.skorKeaktifan) || 80,
       skorFokus: Number(report.skorFokus) || 80,
+      fotoDokumentasi: report.fotoDokumentasi || [],
       tema: report.theme || 'solar',
       createdAt: report.createdAt || new Date().toISOString()
     };
@@ -118,6 +123,7 @@ export function subscribeReportsFromCloud(onData: (reports: ReportData[]) => voi
         skorPemahaman: data.skorPemahaman ?? 80,
         skorKeaktifan: data.skorKeaktifan ?? 80,
         skorFokus: data.skorFokus ?? 80,
+        fotoDokumentasi: Array.isArray(data.fotoDokumentasi) ? data.fotoDokumentasi : [],
         theme: data.tema || data.theme || 'solar',
         createdAt: data.createdAt || new Date().toISOString()
       };
@@ -198,4 +204,59 @@ export function subscribeStudentsFromCloud(onData: (students: StudentData[]) => 
     if (onError) onError(err);
   });
 }
+
+// Save standalone photo item to cloud
+export async function savePhotoToCloud(photo: PhotoItem): Promise<void> {
+  try {
+    const docRef = doc(db, PHOTOS_COLLECTION, photo.id);
+    const cleanPayload = {
+      url: photo.url,
+      caption: photo.caption || '',
+      namaSiswa: photo.namaSiswa || '',
+      tanggal: photo.tanggal || new Date().toISOString().split('T')[0],
+      namaPengajar: photo.namaPengajar || '',
+      mataPelajaran: photo.mataPelajaran || '',
+      createdAt: photo.createdAt || new Date().toISOString()
+    };
+    await setDoc(docRef, cleanPayload, { merge: true });
+  } catch (err) {
+    handleFirestoreError(err, OperationType.WRITE, `photos/${photo.id}`);
+  }
+}
+
+// Delete photo item from cloud
+export async function deletePhotoFromCloud(id: string): Promise<void> {
+  try {
+    const docRef = doc(db, PHOTOS_COLLECTION, id);
+    await deleteDoc(docRef);
+  } catch (err) {
+    handleFirestoreError(err, OperationType.DELETE, `photos/${id}`);
+  }
+}
+
+// Real-time listener for standalone photo gallery items
+export function subscribePhotosFromCloud(onData: (photos: PhotoItem[]) => void, onError?: (err: Error) => void) {
+  const q = query(collection(db, PHOTOS_COLLECTION), orderBy('createdAt', 'desc'));
+  
+  return onSnapshot(q, (snapshot) => {
+    const photos: PhotoItem[] = snapshot.docs.map(docSnap => {
+      const data = docSnap.data();
+      return {
+        id: docSnap.id,
+        url: data.url || '',
+        caption: data.caption || '',
+        namaSiswa: data.namaSiswa || '',
+        tanggal: data.tanggal || '',
+        namaPengajar: data.namaPengajar || '',
+        mataPelajaran: data.mataPelajaran || '',
+        createdAt: data.createdAt || new Date().toISOString()
+      };
+    });
+    onData(photos);
+  }, (err) => {
+    console.error("Firestore photos snapshot error:", err);
+    if (onError) onError(err);
+  });
+}
+
 

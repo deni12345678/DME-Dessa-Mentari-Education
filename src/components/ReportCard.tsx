@@ -12,7 +12,8 @@ import {
   Award,
   FileText,
   MessageSquareQuote,
-  Target
+  Target,
+  Camera
 } from 'lucide-react';
 
 interface ReportCardProps {
@@ -358,6 +359,42 @@ export const ReportCard: React.FC<ReportCardProps> = ({ report }) => {
             </div>
             <div className={`p-3.5 text-xs whitespace-pre-line italic leading-relaxed ${isDark ? 'text-zinc-200' : 'text-slate-700'}`}>
               "{report.catatanOrangTua}"
+            </div>
+          </div>
+        )}
+
+        {/* SECTION 5: DOKUMENTASI FOTO KEGIATAN LES (IF ANY) */}
+        {report.fotoDokumentasi && report.fotoDokumentasi.length > 0 && (
+          <div className={`rounded-xl border overflow-hidden shadow-xs ${isDark ? 'border-amber-500/40 bg-zinc-800/90' : 'border-slate-200 bg-white'}`}>
+            <div className={`px-4 py-2 border-b flex items-center justify-between ${t.sectionHeaderBg} ${t.cardBorder}`}>
+              <div className="flex items-center gap-2">
+                <Camera className={`w-3.5 h-3.5 ${t.sectionHeaderText}`} />
+                <h2 className={`text-[11px] font-bold uppercase tracking-wider ${t.sectionHeaderText}`}>
+                  Dokumentasi Foto Sesi Les
+                </h2>
+              </div>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${t.badgeBg} border ${t.badgeBorder}`}>
+                {report.fotoDokumentasi.length} Foto Lampiran
+              </span>
+            </div>
+
+            <div className="p-3 grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+              {report.fotoDokumentasi.map((photo, idx) => (
+                <div key={photo.id || idx} className="rounded-lg border border-slate-200 overflow-hidden bg-slate-50 flex flex-col">
+                  <div className="aspect-4/3 w-full bg-slate-200 overflow-hidden relative">
+                    <img
+                      src={photo.url}
+                      alt={photo.caption || `Foto Dokumentasi ${idx + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  {photo.caption && (
+                    <div className="p-1.5 text-[10px] font-medium text-slate-700 truncate bg-white border-t border-slate-100">
+                      {photo.caption}
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         )}

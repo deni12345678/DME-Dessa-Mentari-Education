@@ -18,8 +18,13 @@ import {
   Award,
   Target,
   UserCheck,
-  GraduationCap
+  GraduationCap,
+  Camera,
+  Upload,
+  X,
+  Image as ImageIcon
 } from 'lucide-react';
+import { compressImageFile } from '../utils/imageCompressor';
 
 interface ReportFormProps {
   report: ReportData;
@@ -517,6 +522,104 @@ export const ReportForm: React.FC<ReportFormProps> = ({
             placeholder="Contoh: Mohon Ananda dibantu mengulang hafalan perkalian 7 di rumah ya Bund."
             className="w-full text-xs p-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
           />
+        </div>
+
+        {/* 📷 DOKUMENTASI FOTO KEGIATAN LES */}
+        <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl space-y-3">
+          <div className="flex items-center justify-between">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+              <Camera className="w-4 h-4 text-amber-600" />
+              <span>Dokumentasi Foto Kegiatan Les</span>
+              <span className="text-[10px] text-amber-700 bg-amber-100 font-extrabold px-2 py-0.5 rounded-full border border-amber-300">
+                {(report.fotoDokumentasi || []).length} / 6 Foto
+              </span>
+            </h4>
+            <span className="text-[10px] text-slate-400 font-medium">Opsional</span>
+          </div>
+
+          <p className="text-xs text-slate-500">
+            Unggah foto pembelajaran siswa (kegiatan les, hasil latihan, praktikum). Kompresi otomatis web-optimized.
+          </p>
+
+          {/* Photo File Upload Trigger */}
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            <label className="px-3.5 py-2 text-xs font-bold text-amber-950 bg-amber-300 hover:bg-amber-200 cursor-pointer rounded-xl transition-all shadow-2xs flex items-center gap-1.5 active:scale-95">
+              <Upload className="w-3.5 h-3.5" />
+              <span>+ Pilih / Ambil Foto</span>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                capture="environment"
+                className="hidden"
+                onChange={async (e) => {
+                  if (!e.target.files) return;
+                  const files = Array.from(e.target.files);
+                  const newItems = [];
+                  for (const file of files) {
+                    try {
+                      const compressedUrl = await compressImageFile(file);
+                      newItems.push({
+                        id: `IMG-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+                        url: compressedUrl,
+                        caption: `Dokumentasi Les ${report.mataPelajaran || ''}`,
+                        namaSiswa: report.namaSiswa,
+                        tanggal: report.tanggal,
+                        namaPengajar: report.namaPengajar,
+                        createdAt: new Date().toISOString()
+                      });
+                    } catch (err) {
+                      console.error('Failed to compress photo:', err);
+                    }
+                  }
+                  const currentPhotos = report.fotoDokumentasi || [];
+                  onChange({ fotoDokumentasi: [...currentPhotos, ...newItems].slice(0, 6) });
+                  e.target.value = '';
+                }}
+              />
+            </label>
+          </div>
+
+          {/* Photo Grid Preview & Caption Input */}
+          {(report.fotoDokumentasi || []).length > 0 && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
+              {(report.fotoDokumentasi || []).map((photo, idx) => (
+                <div key={photo.id || idx} className="relative group bg-white rounded-xl border border-slate-200 overflow-hidden shadow-2xs">
+                  <div className="aspect-4/3 w-full bg-slate-100 overflow-hidden relative">
+                    <img
+                      src={photo.url}
+                      alt={photo.caption || 'Foto Dokumentasi'}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const filtered = (report.fotoDokumentasi || []).filter((_, i) => i !== idx);
+                        onChange({ fotoDokumentasi: filtered });
+                      }}
+                      className="absolute top-1.5 right-1.5 p-1 bg-slate-900/80 hover:bg-red-600 text-white rounded-full transition-colors shadow-xs"
+                      title="Hapus foto"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <div className="p-2">
+                    <input
+                      type="text"
+                      value={photo.caption || ''}
+                      onChange={(e) => {
+                        const updatedList = [...(report.fotoDokumentasi || [])];
+                        updatedList[idx] = { ...updatedList[idx], caption: e.target.value };
+                        onChange({ fotoDokumentasi: updatedList });
+                      }}
+                      placeholder="Judul / Keterangan foto..."
+                      className="w-full text-[11px] p-1 rounded border border-slate-200 outline-none focus:border-amber-500"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

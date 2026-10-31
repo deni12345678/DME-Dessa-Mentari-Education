@@ -16,8 +16,8 @@ service cloud.firestore {
       data.tanggal is string && data.tanggal.size() <= 30 &&
       data.jenjang is string &&
       data.mataPelajaran is string && data.mataPelajaran.size() <= 100 &&
-      data.materi is string && data.materi.size() <= 2000 &&
-      data.perkembangan is string && data.perkembangan.size() <= 2000 &&
+      data.materi is string && data.materi.size() <= 10000 &&
+      data.perkembangan is string && data.perkembangan.size() <= 10000 &&
       data.namaPengajar is string && data.namaPengajar.size() <= 100 &&
       (data.skorPemahaman is number || data.skorPemahaman is int) &&
       (data.skorKeaktifan is number || data.skorKeaktifan is int) &&
@@ -32,6 +32,13 @@ service cloud.firestore {
       data.createdAt is string;
     }
 
+    function isValidPhoto(data) {
+      return data.keys().hasAll(['url', 'namaSiswa', 'createdAt']) &&
+      data.url is string &&
+      data.namaSiswa is string &&
+      data.createdAt is string;
+    }
+
     match /reports/{reportId} {
       allow read: if true;
       allow create, update: if isValidReport(request.resource.data);
@@ -41,6 +48,12 @@ service cloud.firestore {
     match /students/{studentId} {
       allow read: if true;
       allow create, update: if isValidStudent(request.resource.data);
+      allow delete: if true;
+    }
+
+    match /photos/{photoId} {
+      allow read: if true;
+      allow create, update: if isValidPhoto(request.resource.data);
       allow delete: if true;
     }
   }

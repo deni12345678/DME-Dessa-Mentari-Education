@@ -19,6 +19,17 @@ export type AttendanceStatus = 'Hadir' | 'Reschedule / Disingkat' | 'Izin / Saki
 
 export type CardTheme = 'solar' | 'emerald' | 'navy' | 'pastel' | 'dark';
 
+export interface PhotoItem {
+  id: string;
+  url: string; // Base64 data URL or web image URL
+  caption?: string;
+  namaSiswa?: string;
+  tanggal?: string;
+  namaPengajar?: string;
+  mataPelajaran?: string;
+  createdAt?: string;
+}
+
 export interface ReportData {
   id: string;
   namaSiswa: string;
@@ -39,6 +50,7 @@ export interface ReportData {
   evaluasiSiswa: string;
   tugasRumah?: string;
   catatanOrangTua?: string;
+  fotoDokumentasi?: PhotoItem[];
   theme: CardTheme;
   createdAt: string;
 }

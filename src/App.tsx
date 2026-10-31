@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ReportData, TeacherSettings, StudentData } from './types/report';
+import { ReportData, TeacherSettings, StudentData, PhotoItem } from './types/report';
 import { Header, ActiveTabType } from './components/Header';
 import { ReportForm } from './components/ReportForm';
 import { ReportCard } from './components/ReportCard';
@@ -10,6 +10,7 @@ import { GuideView } from './components/GuideView';
 import { AiVideoStudio } from './components/AiVideoStudio';
 import { StatsSummaryPanel } from './components/StatsSummaryPanel';
 import { StudentManagementView } from './components/StudentManagementView';
+import { PhotoGalleryView } from './components/PhotoGalleryView';
 import { 
   downloadReportAsImage, 
   copyWhatsAppTextToClipboard, 
@@ -22,7 +23,10 @@ import {
   subscribeReportsFromCloud,
   saveStudentToCloud,
   deleteStudentFromCloud,
-  subscribeStudentsFromCloud
+  subscribeStudentsFromCloud,
+  savePhotoToCloud,
+  deletePhotoFromCloud,
+  subscribePhotosFromCloud
 } from './lib/firebase';
 import { 
   Download, 
@@ -246,6 +250,11 @@ export default function App() {
     return saved ? JSON.parse(saved) : SEED_STUDENTS;
   });
 
+  const [standalonePhotos, setStandalonePhotos] = useState<PhotoItem[]>(() => {
+    const saved = localStorage.getItem('dme_standalone_photos');
+    return saved ? JSON.parse(saved) : [];
+  });
+
   const [downloading, setDownloading] = useState(false);
   const [copiedSuccess, setCopiedSuccess] = useState(false);
   const [saveReportSuccess, setSaveReportSuccess] = useState(false);
@@ -261,7 +270,7 @@ export default function App() {
     setTimeout(() => setAdminLinkCopied(false), 2500);
   };
 
-  // Initialize Firebase Cloud test and subscribe to real-time reports & students
+  // Initialize Firebase Cloud test and subscribe to real-time reports, students & photos
   useEffect(() => {
     testConnection();
 
@@ -299,9 +308,21 @@ export default function App() {
       }
     );
 
+    const unsubscribePhotos = subscribePhotosFromCloud(
+      (cloudPhotos) => {
+        if (cloudPhotos.length > 0) {
+          setStandalonePhotos(cloudPhotos);
+        }
+      },
+      (err) => {
+        console.warn('Firebase photos sync listener warning:', err);
+      }
+    );
+
     return () => {
       unsubscribeReports();
       unsubscribeStudents();
+      unsubscribePhotos();
     };
   }, []);
 
@@ -332,6 +353,11 @@ export default function App() {
     localStorage.setItem('dme_registered_students', JSON.stringify(students));
   }, [students]);
 
+  // Sync standalone photos to localStorage
+  useEffect(() => {
+    localStorage.setItem('dme_standalone_photos', JSON.stringify(standalonePhotos));
+  }, [standalonePhotos]);
+
   const handleSaveStudent = (studentToSave: StudentData) => {
     setStudents((prev) => {
       const idx = prev.findIndex((s) => s.id === studentToSave.id);
@@ -354,6 +380,16 @@ export default function App() {
     deleteStudentFromCloud(id).catch((err) => {
       console.error('Failed to delete student from cloud:', err);
     });
+  };
+
+  const handleUploadPhoto = async (photo: PhotoItem) => {
+    setStandalonePhotos((prev) => [photo, ...prev]);
+    await savePhotoToCloud(photo);
+  };
+
+  const handleDeletePhoto = async (id: string) => {
+    setStandalonePhotos((prev) => prev.filter((p) => p.id !== id));
+    await deletePhotoFromCloud(id);
   };
 
   const handleSelectStudentForReport = (student: StudentData) => {
@@ -463,6 +499,8 @@ export default function App() {
     }
   };
 
+  const totalPhotosCount = standalonePhotos.length + savedReports.reduce((acc, r) => acc + (r.fotoDokumentasi?.length || 0), 0);
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
       {/* HEADER NAVBAR */}
@@ -474,6 +512,7 @@ export default function App() {
         onCopyAdminLink={handleCopyAdminPortalLink}
         adminLinkCopied={adminLinkCopied}
         studentsCount={students.length}
+        photosCount={totalPhotosCount}
       />
 
       {/* MAIN CONTAINER */}
@@ -625,6 +664,16 @@ export default function App() {
               </div>
             </div>
           </div>
+        )}
+
+        {activeTab === 'photos' && (
+          <PhotoGalleryView
+            reports={savedReports}
+            standalonePhotos={standalonePhotos}
+            students={students}
+            onUploadPhoto={handleUploadPhoto}
+            onDeletePhoto={handleDeletePhoto}
+          />
         )}
 
         {activeTab === 'video' && <AiVideoStudio report={report} />}

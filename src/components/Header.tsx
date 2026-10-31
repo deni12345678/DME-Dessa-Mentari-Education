@@ -1,7 +1,7 @@
 import React from 'react';
-import { Download, History, Settings, FilePlus, HelpCircle, Film, GraduationCap } from 'lucide-react';
+import { Download, History, Settings, FilePlus, HelpCircle, Film, GraduationCap, Camera } from 'lucide-react';
 
-export type ActiveTabType = 'create' | 'video' | 'students' | 'history' | 'settings' | 'guide';
+export type ActiveTabType = 'create' | 'students' | 'photos' | 'video' | 'history' | 'settings' | 'guide';
 
 interface HeaderProps {
   activeTab: ActiveTabType;
@@ -12,6 +12,7 @@ interface HeaderProps {
   onCopyAdminLink?: () => void;
   adminLinkCopied?: boolean;
   studentsCount?: number;
+  photosCount?: number;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -23,6 +24,7 @@ export const Header: React.FC<HeaderProps> = ({
   onCopyAdminLink,
   adminLinkCopied = false,
   studentsCount,
+  photosCount,
 }) => {
   return (
     <header className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-2xs">
@@ -84,6 +86,25 @@ export const Header: React.FC<HeaderProps> = ({
               {studentsCount !== undefined && (
                 <span className="text-[10px] bg-amber-100 text-amber-900 font-bold px-1.5 py-0.2 rounded-full border border-amber-300">
                   {studentsCount}
+                </span>
+              )}
+            </span>
+          </button>
+
+          <button
+            onClick={() => onTabChange('photos')}
+            className={`flex items-center gap-1.5 py-1.5 transition-colors whitespace-nowrap shrink-0 ${
+              activeTab === 'photos'
+                ? 'text-amber-700 font-bold border-b-2 border-amber-600'
+                : 'hover:text-slate-900'
+            }`}
+          >
+            <Camera className="w-4 h-4 text-amber-600" />
+            <span className="flex items-center gap-1">
+              Dokumentasi Foto
+              {photosCount !== undefined && photosCount > 0 && (
+                <span className="text-[10px] bg-amber-100 text-amber-900 font-bold px-1.5 py-0.2 rounded-full border border-amber-300">
+                  {photosCount}
                 </span>
               )}
             </span>
@@ -185,6 +206,15 @@ export const Header: React.FC<HeaderProps> = ({
         >
           <GraduationCap className="w-3.5 h-3.5 text-amber-600" />
           <span>Siswa</span>
+        </button>
+        <button
+          onClick={() => onTabChange('photos')}
+          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap ${
+            activeTab === 'photos' ? 'bg-amber-100 text-amber-900 font-bold' : 'text-slate-600'
+          }`}
+        >
+          <Camera className="w-3.5 h-3.5 text-amber-600" />
+          <span>Galeri Foto</span>
         </button>
         <button
           onClick={() => onTabChange('video')}
