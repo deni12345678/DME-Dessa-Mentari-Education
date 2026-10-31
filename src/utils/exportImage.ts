@@ -1,13 +1,11 @@
-import html2canvas from 'html2canvas';
 import { ReportData } from '../types/report';
 import { captureElementToCanvas, downloadReportAsPdf } from './exportPdf';
 
 export { downloadReportAsPdf, captureElementToCanvas };
 
 /**
- * Downloads the specified DOM container as a high-resolution JPG or PNG image.
- * Uses progressive scale down (scale 2 -> 1.5 -> 1) to prevent mobile browser memory errors,
- * and sanitizes image tags so cross-origin or data URL images do not taint the canvas.
+ * Downloads the specified DOM element as a high-resolution JPG or PNG image.
+ * Uses optimized blob generation for instant, fluid mobile download.
  */
 export async function downloadReportAsImage(
   elementId: string,
@@ -28,7 +26,7 @@ export async function downloadReportAsImage(
     const safeFilename = filename.replace(/[^a-zA-Z0-9_-]/g, '_');
     const finalName = `${safeFilename}.${format}`;
 
-    // Attempt 1: Modern Blob URL (best for mobile memory management)
+    // Modern Blob download (avoids heavy string memory allocation on mobile devices)
     if (canvas.toBlob) {
       try {
         const blob = await new Promise<Blob | null>((resolve) => {
@@ -40,8 +38,7 @@ export async function downloadReportAsImage(
           const link = document.createElement('a');
           link.download = finalName;
           link.href = blobUrl;
-          link.target = '_self';
-          link.rel = 'noopener';
+          link.style.display = 'none';
           document.body.appendChild(link);
           link.click();
 
@@ -50,23 +47,22 @@ export async function downloadReportAsImage(
               document.body.removeChild(link);
             }
             URL.revokeObjectURL(blobUrl);
-          }, 1500);
+          }, 1000);
 
           return true;
         }
       } catch (blobErr) {
-        console.warn('Canvas toBlob failed, falling back to dataURL:', blobErr);
+        console.warn('Blob export failed, trying dataURL:', blobErr);
       }
     }
 
-    // Attempt 2: Data URL fallback
+    // Direct dataURL fallback
     try {
       const dataUrl = canvas.toDataURL(mimeType, quality);
       const link = document.createElement('a');
       link.download = finalName;
       link.href = dataUrl;
-      link.target = '_self';
-      link.rel = 'noopener';
+      link.style.display = 'none';
       document.body.appendChild(link);
       link.click();
 
@@ -74,15 +70,15 @@ export async function downloadReportAsImage(
         if (link.parentNode) {
           document.body.removeChild(link);
         }
-      }, 1500);
+      }, 1000);
 
       return true;
     } catch (dataUrlErr) {
-      console.error('Data URL export failed:', dataUrlErr);
+      console.error('DataURL export failed:', dataUrlErr);
       return false;
     }
   } catch (err) {
-    console.error('Error generating image via html2canvas:', err);
+    console.error('Error generating image:', err);
     return false;
   }
 }
@@ -98,30 +94,36 @@ export function generateWhatsAppText(report: ReportData): string {
     day: 'numeric',
   });
 
-  return `*LAPORAN PEMBELAJARAN LES PRIVAT*
+  return `*LEMBAR LAPORAN EVALUASI BELAJAR SISWA*
 *DESSA MENTARI EDUCATION*
-✨ *Bright Learning & Tutoring System*
+✨ *Tempat Belajar Terpercaya · Les Privat Keluarga Indonesia*
 ================================
 
 👤 *Nama Siswa:* ${report.namaSiswa} ${report.kelasGrade ? `(${report.kelasGrade})` : ''}
-📅 *Tanggal:* ${dateFormatted || report.tanggal}
+📅 *Tanggal Sesi:* ${dateFormatted || report.tanggal}
 🎓 *Jenjang:* ${report.jenjang}
 📚 *Mata Pelajaran:* ${report.mataPelajaran}
 ⏰ *Durasi/Waktu:* ${report.waktuDurasi || '90 Menit'}
-👨‍🏫 *Pengajar (Tutor):* ${report.namaPengajar}
+👨‍🏫 *Tutor Pendamping:* ${report.namaPengajar}
 📌 *Status Kehadiran:* ${report.statusKehadiran}
 
 ================================
-📖 *MATERI YANG DIPELAJARI:*
-${report.materiDipelajari}
-
-⭐ *EVALUASI & PERKEMBANGAN SISWA:*
-${report.evaluasiSiswa}
-${report.tugasRumah ? `\n📝 *PR / TUGAS RUMAH:*\n${report.tugasRumah}` : ''}
-${report.catatanOrangTua ? `\n💬 *CATATAN UNTUK ORANG TUA:*\n${report.catatanOrangTua}` : ''}
+📊 *MATRIKS CAPAIAN BELAJAR:*
+• Pemahaman Materi: ${report.skorPemahaman ?? 85}%
+• Keaktifan Belajar: ${report.skorKeaktifan ?? 90}%
+• Fokus & Konsentrasi: ${report.skorFokus ?? 85}%
 
 ================================
-_Terima kasih atas kepercayaan Ibu/Bapak kepada Dessa Mentari Education. Semoga ananda senantiasa berprestasi!_ 🌟`;
+📖 *POKOK BAHASAN / MATERI:*
+${report.materiDipelajari}
+
+⭐ *EVALUASI & OBSERVASI PERKEMBANGAN:*
+${report.evaluasiSiswa}
+${report.tugasRumah ? `\n📝 *PR / TUGAS MANDIRI:*\n${report.tugasRumah}` : ''}
+${report.catatanOrangTua ? `\n💬 *CATATAN ORANG TUA:*\n${report.catatanOrangTua}` : ''}
+
+================================
+_Dokumen evaluasi berkala diterbitkan resmi oleh Dessa Mentari Education. Terima kasih atas kepercayaan Ayah/Bunda!_ 🌟`;
 }
 
 /**

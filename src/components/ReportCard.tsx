@@ -13,7 +13,9 @@ import {
   FileText,
   MessageSquareQuote,
   Target,
-  Camera
+  Camera,
+  ShieldCheck,
+  Check
 } from 'lucide-react';
 
 interface ReportCardProps {
@@ -23,76 +25,113 @@ interface ReportCardProps {
 const themeStyles: Record<CardTheme, {
   headerBg: string;
   headerText: string;
-  accentBg: string;
-  accentText: string;
+  subText: string;
+  goldAccent: string;
   badgeBg: string;
   badgeBorder: string;
   cardBorder: string;
+  outerBorder: string;
   sectionHeaderBg: string;
   sectionHeaderText: string;
+  sectionBorder: string;
+  tableHeaderBg: string;
+  metricBarBg: string;
   footerBg: string;
+  footerText: string;
 }> = {
   solar: {
-    headerBg: 'bg-gradient-to-r from-amber-600 via-orange-500 to-amber-700',
-    headerText: 'text-white',
-    accentBg: 'bg-amber-500',
-    accentText: 'text-amber-800',
-    badgeBg: 'bg-amber-50 text-amber-700',
+    headerBg: 'bg-gradient-to-r from-slate-950 via-slate-900 to-amber-950',
+    headerText: 'text-amber-100',
+    subText: 'text-amber-300/80',
+    goldAccent: 'border-amber-500/40 text-amber-600',
+    badgeBg: 'bg-amber-50 text-amber-900 border-amber-200',
     badgeBorder: 'border-amber-200',
-    cardBorder: 'border-amber-200',
-    sectionHeaderBg: 'bg-amber-500/10',
-    sectionHeaderText: 'text-amber-900',
-    footerBg: 'bg-amber-900 text-amber-100',
+    cardBorder: 'border-amber-200/90',
+    outerBorder: 'border-amber-600/30',
+    sectionHeaderBg: 'bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent',
+    sectionHeaderText: 'text-amber-950',
+    sectionBorder: 'border-amber-500/30',
+    tableHeaderBg: 'bg-amber-50/70 text-amber-950',
+    metricBarBg: 'bg-amber-500',
+    footerBg: 'bg-slate-950 text-amber-100/90',
+    footerText: 'text-amber-200/70',
   },
   emerald: {
-    headerBg: 'bg-gradient-to-r from-emerald-700 via-teal-600 to-emerald-800',
-    headerText: 'text-white',
-    accentBg: 'bg-emerald-600',
-    accentText: 'text-emerald-800',
-    badgeBg: 'bg-emerald-50 text-emerald-700',
+    headerBg: 'bg-gradient-to-r from-slate-950 via-emerald-950 to-slate-950',
+    headerText: 'text-emerald-100',
+    subText: 'text-emerald-300/80',
+    goldAccent: 'border-emerald-500/40 text-emerald-600',
+    badgeBg: 'bg-emerald-50 text-emerald-900 border-emerald-200',
     badgeBorder: 'border-emerald-200',
-    cardBorder: 'border-emerald-200',
-    sectionHeaderBg: 'bg-emerald-500/10',
-    sectionHeaderText: 'text-emerald-900',
-    footerBg: 'bg-emerald-950 text-emerald-100',
+    cardBorder: 'border-emerald-200/90',
+    outerBorder: 'border-emerald-600/30',
+    sectionHeaderBg: 'bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent',
+    sectionHeaderText: 'text-emerald-950',
+    sectionBorder: 'border-emerald-500/30',
+    tableHeaderBg: 'bg-emerald-50/70 text-emerald-950',
+    metricBarBg: 'bg-emerald-600',
+    footerBg: 'bg-slate-950 text-emerald-100/90',
+    footerText: 'text-emerald-200/70',
   },
   navy: {
-    headerBg: 'bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900',
-    headerText: 'text-white',
-    accentBg: 'bg-indigo-600',
-    accentText: 'text-indigo-800',
-    badgeBg: 'bg-indigo-50 text-indigo-700',
+    headerBg: 'bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900',
+    headerText: 'text-indigo-100',
+    subText: 'text-indigo-300/80',
+    goldAccent: 'border-indigo-500/40 text-indigo-600',
+    badgeBg: 'bg-indigo-50 text-indigo-900 border-indigo-200',
     badgeBorder: 'border-indigo-200',
-    cardBorder: 'border-indigo-200',
-    sectionHeaderBg: 'bg-indigo-500/10',
+    cardBorder: 'border-indigo-200/90',
+    outerBorder: 'border-indigo-600/30',
+    sectionHeaderBg: 'bg-gradient-to-r from-indigo-500/10 via-indigo-500/5 to-transparent',
     sectionHeaderText: 'text-indigo-950',
-    footerBg: 'bg-slate-950 text-slate-200',
+    sectionBorder: 'border-indigo-500/30',
+    tableHeaderBg: 'bg-indigo-50/70 text-indigo-950',
+    metricBarBg: 'bg-indigo-600',
+    footerBg: 'bg-slate-950 text-indigo-100/90',
+    footerText: 'text-indigo-200/70',
   },
   pastel: {
-    headerBg: 'bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-700',
-    headerText: 'text-white',
-    accentBg: 'bg-violet-600',
-    accentText: 'text-violet-800',
-    badgeBg: 'bg-violet-50 text-violet-700',
-    badgeBorder: 'border-violet-200',
-    cardBorder: 'border-violet-200',
-    sectionHeaderBg: 'bg-violet-500/10',
-    sectionHeaderText: 'text-violet-900',
-    footerBg: 'bg-violet-950 text-violet-100',
+    headerBg: 'bg-gradient-to-r from-slate-950 via-purple-950 to-slate-900',
+    headerText: 'text-purple-100',
+    subText: 'text-purple-300/80',
+    goldAccent: 'border-purple-500/40 text-purple-600',
+    badgeBg: 'bg-purple-50 text-purple-900 border-purple-200',
+    badgeBorder: 'border-purple-200',
+    cardBorder: 'border-purple-200/90',
+    outerBorder: 'border-purple-600/30',
+    sectionHeaderBg: 'bg-gradient-to-r from-purple-500/10 via-purple-500/5 to-transparent',
+    sectionHeaderText: 'text-purple-950',
+    sectionBorder: 'border-purple-500/30',
+    tableHeaderBg: 'bg-purple-50/70 text-purple-950',
+    metricBarBg: 'bg-purple-600',
+    footerBg: 'bg-slate-950 text-purple-100/90',
+    footerText: 'text-purple-200/70',
   },
   dark: {
-    headerBg: 'bg-gradient-to-r from-zinc-950 via-zinc-900 to-amber-950 border-b border-amber-500/30',
-    headerText: 'text-amber-300',
-    accentBg: 'bg-amber-500',
-    accentText: 'text-amber-400',
-    badgeBg: 'bg-zinc-800 text-amber-300',
+    headerBg: 'bg-gradient-to-r from-zinc-950 via-zinc-900 to-amber-950',
+    headerText: 'text-amber-200',
+    subText: 'text-amber-400/80',
+    goldAccent: 'border-amber-500/40 text-amber-400',
+    badgeBg: 'bg-zinc-800 text-amber-300 border-amber-500/40',
     badgeBorder: 'border-amber-500/40',
     cardBorder: 'border-amber-500/30',
-    sectionHeaderBg: 'bg-amber-500/15',
+    outerBorder: 'border-amber-500/40',
+    sectionHeaderBg: 'bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent',
     sectionHeaderText: 'text-amber-300',
-    footerBg: 'bg-zinc-950 text-amber-200 border-t border-amber-500/30',
+    sectionBorder: 'border-amber-500/40',
+    tableHeaderBg: 'bg-zinc-800 text-amber-300',
+    metricBarBg: 'bg-amber-500',
+    footerBg: 'bg-zinc-950 text-amber-100',
+    footerText: 'text-amber-400/60',
   },
 };
+
+function getScorePredicate(score: number): { label: string; color: string; badge: string } {
+  if (score >= 90) return { label: 'Amat Baik (A)', color: 'text-emerald-700', badge: 'bg-emerald-50 text-emerald-800 border-emerald-200' };
+  if (score >= 75) return { label: 'Baik (B)', color: 'text-blue-700', badge: 'bg-blue-50 text-blue-800 border-blue-200' };
+  if (score >= 60) return { label: 'Cukup (C)', color: 'text-amber-700', badge: 'bg-amber-50 text-amber-800 border-amber-200' };
+  return { label: 'Perlu Bimbingan (D)', color: 'text-rose-700', badge: 'bg-rose-50 text-rose-800 border-rose-200' };
+}
 
 export const ReportCard: React.FC<ReportCardProps> = ({ report }) => {
   const t = themeStyles[report.theme || 'solar'];
@@ -107,31 +146,43 @@ export const ReportCard: React.FC<ReportCardProps> = ({ report }) => {
       })
     : 'Tanggal Belum Dipilih';
 
+  const rawDate = report.tanggal || new Date().toISOString().split('T')[0];
+  const yearCode = rawDate.split('-')[0] || '2026';
+  const cleanId = (report.id || 'RPT').replace(/[^a-zA-Z0-9]/g, '').slice(-4).toUpperCase();
+  const serialNo = `DME-EVL/${yearCode}/${cleanId || '0101'}`;
+
   const pemahamanScore = report.skorPemahaman ?? 85;
   const keaktifanScore = report.skorKeaktifan ?? 90;
   const fokusScore = report.skorFokus ?? 85;
 
+  const pemahamanPred = getScorePredicate(pemahamanScore);
+  const keaktifanPred = getScorePredicate(keaktifanScore);
+  const fokusPred = getScorePredicate(fokusScore);
+
   return (
     <div
       id="report-card-container"
-      className={`w-full max-w-[680px] mx-auto rounded-2xl shadow-xl overflow-hidden border transition-all duration-300 font-sans ${
+      className={`w-full max-w-[760px] mx-auto rounded-xl shadow-2xl overflow-hidden border-2 transition-all duration-300 font-sans print:border-none print:shadow-none print:max-w-none print:w-full ${
         isDark 
           ? 'bg-zinc-900 border-amber-500/40 text-amber-100' 
-          : 'bg-white border-slate-200 text-slate-800'
+          : 'bg-white border-slate-300 text-slate-800'
       }`}
       style={{ boxSizing: 'border-box' }}
     >
-      {/* BRAND HEADER WITH OFFICIAL LOGO */}
-      <div className={`${t.headerBg} p-6 relative text-white overflow-hidden`}>
-        {/* Background rays */}
-        <div className="absolute -right-8 -bottom-10 opacity-15 pointer-events-none">
-          <Sun className="w-48 h-48 text-white" />
+      {/* TOP SECURITY ACCENT STRIP */}
+      <div className="h-1.5 w-full bg-gradient-to-r from-amber-600 via-amber-400 to-amber-700"></div>
+
+      {/* INSTITUTIONAL LETTERHEAD & BRAND HEADER */}
+      <div className={`${t.headerBg} p-5 sm:p-6 relative text-white overflow-hidden border-b border-amber-500/30`}>
+        {/* Subtle decorative crest watermark */}
+        <div className="absolute right-2 -bottom-10 opacity-10 pointer-events-none">
+          <Sun className="w-56 h-56 text-amber-300" />
         </div>
-        
-        <div className="flex items-center justify-between relative z-10">
-          <div className="flex items-center gap-3.5">
-            {/* Official Logo Display */}
-            <div className="w-16 h-16 rounded-2xl bg-white p-1.5 shadow-md flex items-center justify-center shrink-0 border border-white/40">
+
+        <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5 sm:gap-4">
+            {/* Crest Frame with Official Logo */}
+            <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-xl bg-white p-2 shadow-lg flex items-center justify-center shrink-0 border-2 border-amber-400/80">
               <img
                 src="/assets/aistudio/Logo_Pendidikan_Dessa_Mentari_6f1f1e2d.png"
                 alt="Logo Dessa Mentari Education"
@@ -143,266 +194,300 @@ export const ReportCard: React.FC<ReportCardProps> = ({ report }) => {
                 }}
               />
             </div>
+
             <div>
-              <div className="text-[11px] font-bold uppercase tracking-widest text-amber-200/90 flex items-center gap-1.5">
-                <Sparkles className="w-3 h-3" />
-                DESSA MENTARI EDUCATION
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black uppercase tracking-widest text-amber-300 px-2 py-0.5 rounded bg-amber-500/20 border border-amber-400/30">
+                  Lembaga Bimbingan Resmi
+                </span>
+                <span className="text-[10px] text-slate-300 hidden sm:inline">·</span>
+                <span className="text-[10px] text-amber-200/90 font-medium hidden sm:inline">
+                  Akreditasi Pembelajaran Berstandar
+                </span>
               </div>
-              <h1 className={`text-xl sm:text-2xl font-extrabold tracking-tight font-serif-brand ${isDark ? 'text-amber-200' : 'text-white'}`}>
-                Laporan Pembelajaran Les Privat
+              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white font-serif-brand pt-0.5">
+                DESSA MENTARI EDUCATION
               </h1>
-              <p className="text-xs text-white/80 font-medium">
-                Tempat Belajar Terpercaya · Sistem Evaluasi Resmi
+              <p className="text-xs text-amber-200/90 font-medium">
+                Tempat Belajar Terpercaya · Les Privat Keluarga Indonesia
               </p>
             </div>
           </div>
 
-          <div className="hidden sm:flex flex-col items-end">
-            <span className={`px-3 py-1 bg-white/15 backdrop-blur-md rounded-full text-[11px] font-semibold tracking-wide border border-white/25 flex items-center gap-1 ${isDark ? 'text-amber-200' : 'text-white'}`}>
-              <Award className="w-3.5 h-3.5 text-amber-300" />
-              Verified Report
+          {/* Official Verification Stamp & Serial */}
+          <div className="flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-white/15">
+            <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-400/20 backdrop-blur-xs rounded-full border border-amber-300/40 text-amber-200 text-[11px] font-bold tracking-wide">
+              <ShieldCheck className="w-3.5 h-3.5 text-amber-300" />
+              <span>DOKUMEN RESMI</span>
+            </div>
+            <span className="text-[10px] text-slate-300/90 font-mono tracking-wider mt-1">
+              {serialNo}
             </span>
+          </div>
+        </div>
+
+        {/* DOCUMENT TITLE RIBBON */}
+        <div className="mt-4 pt-3 border-t border-white/15 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></div>
+            <span className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-amber-100 font-serif-brand">
+              Lembar Evaluasi & Capaian Pembelajaran Siswa
+            </span>
+          </div>
+          <div className="text-[11px] font-medium text-amber-200/80">
+            Terbit: {formattedDate}
           </div>
         </div>
       </div>
 
-      {/* STUDENT & SESSION IDENTITIES GRID */}
-      <div className={`p-5 sm:p-6 space-y-5 ${isDark ? 'bg-gradient-to-b from-zinc-900 via-zinc-900 to-zinc-950' : 'bg-gradient-to-b from-slate-50 to-white'}`}>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {/* Student Name */}
-          <div className={`col-span-2 p-3.5 rounded-xl border shadow-xs flex items-center gap-3 ${isDark ? 'bg-zinc-800/90 border-amber-500/30' : 'bg-white border-slate-200/80'}`}>
-            <div className={`p-2.5 rounded-lg shrink-0 ${isDark ? 'bg-amber-500/20 text-amber-300' : 'bg-amber-50 text-amber-700'}`}>
-              <User className="w-5 h-5" />
+      {/* BODY CONTENT - STRUCTURED ACADEMIC DOSSIER */}
+      <div className={`p-4 sm:p-5 space-y-4 ${isDark ? 'bg-zinc-900 text-zinc-100' : 'bg-slate-50/50 text-slate-800'}`}>
+
+        {/* ACADEMIC DOSSIER TABLE (IDENTITAS SISWA & SESI) */}
+        <div className={`rounded-xl border shadow-xs overflow-hidden ${isDark ? 'border-amber-500/30 bg-zinc-850' : 'border-slate-200 bg-white'}`}>
+          <div className={`px-3.5 py-1.5 text-[10.5px] font-bold uppercase tracking-wider border-b flex items-center justify-between ${
+            isDark ? 'bg-zinc-800 text-amber-300 border-amber-500/30' : 'bg-slate-100/90 text-slate-700 border-slate-200'
+          }`}>
+            <div className="flex items-center gap-1.5">
+              <User className="w-3.5 h-3.5 text-amber-600" />
+              <span>Identitas Siswa & Jadwal Pembelajaran</span>
             </div>
-            <div className="min-w-0">
-              <span className={`text-[10px] uppercase tracking-wider font-semibold block ${isDark ? 'text-amber-400/80' : 'text-slate-400'}`}>
-                Nama Siswa
-              </span>
-              <p className={`text-sm font-bold truncate ${isDark ? 'text-amber-100' : 'text-slate-900'}`}>
-                {report.namaSiswa || 'Kevin Pratama'}
-              </p>
-              {report.kelasGrade && (
-                <span className={`text-[11px] font-medium block ${isDark ? 'text-amber-300/70' : 'text-slate-500'}`}>
-                  {report.kelasGrade}
+            <span className="text-[9.5px] font-mono text-slate-500">FORMAT-DME.A4</span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-slate-200/80 text-xs">
+            {/* Left Column: Student Details */}
+            <div className="p-3 space-y-2">
+              <div className="flex justify-between items-start gap-2">
+                <span className="text-slate-500 font-medium text-[11px] min-w-[100px]">Nama Siswa</span>
+                <span className="text-slate-900 font-extrabold text-right text-[13px] truncate">
+                  {report.namaSiswa || 'Kevin Pratama'}
                 </span>
-              )}
+              </div>
+              <div className="flex justify-between items-center gap-2">
+                <span className="text-slate-500 font-medium text-[11px] min-w-[100px]">Jenjang & Kelas</span>
+                <span className="text-slate-800 font-bold text-right">
+                  {report.jenjang || 'SD'} {report.kelasGrade ? `(${report.kelasGrade})` : ''}
+                </span>
+              </div>
+              <div className="flex justify-between items-center gap-2">
+                <span className="text-slate-500 font-medium text-[11px] min-w-[100px]">Mata Pelajaran</span>
+                <span className="text-amber-900 bg-amber-50 px-2 py-0.5 rounded font-extrabold border border-amber-200 text-right">
+                  {report.mataPelajaran || 'Matematika'}
+                </span>
+              </div>
             </div>
-          </div>
 
-          {/* Education Level */}
-          <div className={`p-3.5 rounded-xl border shadow-xs flex items-center gap-2.5 ${isDark ? 'bg-zinc-800/90 border-amber-500/30' : 'bg-white border-slate-200/80'}`}>
-            <div className={`p-2.5 rounded-lg shrink-0 ${isDark ? 'bg-amber-500/20 text-amber-300' : 'bg-blue-50 text-blue-700'}`}>
-              <GraduationCap className="w-4 h-4" />
-            </div>
-            <div className="min-w-0">
-              <span className={`text-[10px] uppercase tracking-wider font-semibold block ${isDark ? 'text-amber-400/80' : 'text-slate-400'}`}>
-                Jenjang
-              </span>
-              <p className={`text-sm font-bold truncate ${isDark ? 'text-amber-100' : 'text-slate-900'}`}>
-                {report.jenjang || 'SD'}
-              </p>
-            </div>
-          </div>
-
-          {/* Subject */}
-          <div className={`p-3.5 rounded-xl border shadow-xs flex items-center gap-2.5 ${isDark ? 'bg-zinc-800/90 border-amber-500/30' : 'bg-white border-slate-200/80'}`}>
-            <div className={`p-2.5 rounded-lg shrink-0 ${isDark ? 'bg-amber-500/20 text-amber-300' : 'bg-purple-50 text-purple-700'}`}>
-              <BookOpen className="w-4 h-4" />
-            </div>
-            <div className="min-w-0">
-              <span className={`text-[10px] uppercase tracking-wider font-semibold block ${isDark ? 'text-amber-400/80' : 'text-slate-400'}`}>
-                Mata Pelajaran
-              </span>
-              <p className={`text-sm font-bold truncate ${isDark ? 'text-amber-100' : 'text-slate-900'}`}>
-                {report.mataPelajaran || 'Matematika'}
-              </p>
-            </div>
-          </div>
-
-          {/* Date */}
-          <div className={`col-span-2 sm:col-span-2 p-3.5 rounded-xl border shadow-xs flex items-center gap-3 ${isDark ? 'bg-zinc-800/90 border-amber-500/30' : 'bg-white border-slate-200/80'}`}>
-            <div className={`p-2.5 rounded-lg shrink-0 ${isDark ? 'bg-amber-500/20 text-amber-300' : 'bg-emerald-50 text-emerald-700'}`}>
-              <Calendar className="w-4 h-4" />
-            </div>
-            <div className="min-w-0">
-              <span className={`text-[10px] uppercase tracking-wider font-semibold block ${isDark ? 'text-amber-400/80' : 'text-slate-400'}`}>
-                Tanggal Pembelajaran
-              </span>
-              <p className={`text-xs font-bold ${isDark ? 'text-amber-100' : 'text-slate-900'}`}>
-                {formattedDate}
-              </p>
-            </div>
-          </div>
-
-          {/* Duration & Time */}
-          <div className={`p-3.5 rounded-xl border shadow-xs flex items-center gap-2.5 ${isDark ? 'bg-zinc-800/90 border-amber-500/30' : 'bg-white border-slate-200/80'}`}>
-            <div className={`p-2.5 rounded-lg shrink-0 ${isDark ? 'bg-amber-500/20 text-amber-300' : 'bg-orange-50 text-orange-700'}`}>
-              <Clock className="w-4 h-4" />
-            </div>
-            <div className="min-w-0">
-              <span className={`text-[10px] uppercase tracking-wider font-semibold block ${isDark ? 'text-amber-400/80' : 'text-slate-400'}`}>
-                Durasi
-              </span>
-              <p className={`text-xs font-bold truncate ${isDark ? 'text-amber-100' : 'text-slate-900'}`}>
-                {report.waktuDurasi || '90 Menit'}
-              </p>
-            </div>
-          </div>
-
-          {/* Attendance */}
-          <div className={`p-3.5 rounded-xl border shadow-xs flex items-center gap-2.5 ${isDark ? 'bg-zinc-800/90 border-amber-500/30' : 'bg-white border-slate-200/80'}`}>
-            <div className={`p-2.5 rounded-lg shrink-0 ${isDark ? 'bg-amber-500/20 text-amber-300' : 'bg-teal-50 text-teal-700'}`}>
-              <CheckCircle2 className="w-4 h-4" />
-            </div>
-            <div className="min-w-0">
-              <span className={`text-[10px] uppercase tracking-wider font-semibold block ${isDark ? 'text-amber-400/80' : 'text-slate-400'}`}>
-                Status
-              </span>
-              <span className={`inline-block text-xs font-bold truncate ${isDark ? 'text-amber-300' : 'text-teal-700'}`}>
-                {report.statusKehadiran || 'Hadir'}
-              </span>
+            {/* Right Column: Session & Tutor Details */}
+            <div className="p-3 space-y-2">
+              <div className="flex justify-between items-center gap-2">
+                <span className="text-slate-500 font-medium text-[11px] min-w-[100px]">Tanggal Sesi</span>
+                <span className="text-slate-800 font-bold text-right">
+                  {formattedDate}
+                </span>
+              </div>
+              <div className="flex justify-between items-center gap-2">
+                <span className="text-slate-500 font-medium text-[11px] min-w-[100px]">Durasi / Waktu</span>
+                <span className="text-slate-800 font-bold text-right flex items-center gap-1 justify-end">
+                  <Clock className="w-3.5 h-3.5 text-slate-400" />
+                  {report.waktuDurasi || '90 Menit'}
+                </span>
+              </div>
+              <div className="flex justify-between items-center gap-2">
+                <span className="text-slate-500 font-medium text-[11px] min-w-[100px]">Status Kehadiran</span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded font-bold text-[11px] bg-emerald-50 text-emerald-800 border border-emerald-200">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  {report.statusKehadiran || 'Hadir'}
+                </span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* METRICS RATING BADGES BAR */}
-        <div className={`border p-3.5 rounded-xl flex items-center justify-around text-center ${
-          isDark
-            ? 'bg-gradient-to-r from-amber-950/60 via-zinc-900 to-amber-950/60 border-amber-500/40'
-            : 'bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 border-amber-200'
+        {/* METRICS & COMPETENCY ASSESSMENT RUBRIC */}
+        <div className={`p-3.5 rounded-xl border shadow-xs ${
+          isDark 
+            ? 'bg-zinc-800/80 border-amber-500/30' 
+            : 'bg-white border-slate-200'
         }`}>
-          <div>
-            <span className={`text-[10px] uppercase tracking-wider font-bold block flex items-center justify-center gap-1 ${isDark ? 'text-amber-300' : 'text-amber-900'}`}>
-              <Award className="w-3 h-3 text-amber-500" /> Pemahaman
-            </span>
-            <span className={`text-sm font-extrabold ${isDark ? 'text-amber-200' : 'text-amber-800'}`}>{pemahamanScore}%</span>
+          <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-100">
+            <div className="flex items-center gap-1.5">
+              <Award className="w-4 h-4 text-amber-600" />
+              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-800">
+                Matriks Indikator Capaian Belajar Siswa
+              </h2>
+            </div>
+            <span className="text-[10px] text-slate-500 font-medium">Skala 0 - 100%</span>
           </div>
 
-          <div className={`h-7 w-[1px] ${isDark ? 'bg-amber-500/30' : 'bg-amber-200'}`}></div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {/* Metric 1: Pemahaman */}
+            <div className="p-2.5 rounded-lg border border-slate-100 bg-slate-50/60 flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-amber-500" />
+                  Pemahaman Materi
+                </span>
+                <span className="text-sm font-black text-amber-900">{pemahamanScore}%</span>
+              </div>
+              <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden my-1.5">
+                <div 
+                  className="bg-gradient-to-r from-amber-500 to-amber-600 h-full rounded-full transition-all"
+                  style={{ width: `${pemahamanScore}%` }}
+                ></div>
+              </div>
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border inline-block text-center ${pemahamanPred.badge}`}>
+                {pemahamanPred.label}
+              </span>
+            </div>
 
-          <div>
-            <span className={`text-[10px] uppercase tracking-wider font-bold block flex items-center justify-center gap-1 ${isDark ? 'text-amber-300' : 'text-emerald-900'}`}>
-              <Sparkles className="w-3 h-3 text-amber-400" /> Keaktifan
-            </span>
-            <span className={`text-sm font-extrabold ${isDark ? 'text-amber-200' : 'text-emerald-800'}`}>{keaktifanScore}%</span>
-          </div>
+            {/* Metric 2: Keaktifan */}
+            <div className="p-2.5 rounded-lg border border-slate-100 bg-slate-50/60 flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1">
+                  <Check className="w-3 h-3 text-emerald-600" />
+                  Keaktifan Belajar
+                </span>
+                <span className="text-sm font-black text-emerald-800">{keaktifanScore}%</span>
+              </div>
+              <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden my-1.5">
+                <div 
+                  className="bg-gradient-to-r from-emerald-500 to-emerald-600 h-full rounded-full transition-all"
+                  style={{ width: `${keaktifanScore}%` }}
+                ></div>
+              </div>
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border inline-block text-center ${keaktifanPred.badge}`}>
+                {keaktifanPred.label}
+              </span>
+            </div>
 
-          <div className={`h-7 w-[1px] ${isDark ? 'bg-amber-500/30' : 'bg-amber-200'}`}></div>
-
-          <div>
-            <span className={`text-[10px] uppercase tracking-wider font-bold block flex items-center justify-center gap-1 ${isDark ? 'text-amber-300' : 'text-indigo-900'}`}>
-              <Target className="w-3 h-3 text-amber-500" /> Fokus Belajar
-            </span>
-            <span className={`text-sm font-extrabold ${isDark ? 'text-amber-200' : 'text-indigo-800'}`}>{fokusScore}%</span>
+            {/* Metric 3: Fokus */}
+            <div className="p-2.5 rounded-lg border border-slate-100 bg-slate-50/60 flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1">
+                  <Target className="w-3 h-3 text-indigo-600" />
+                  Fokus & Konsentrasi
+                </span>
+                <span className="text-sm font-black text-indigo-900">{fokusScore}%</span>
+              </div>
+              <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden my-1.5">
+                <div 
+                  className="bg-gradient-to-r from-indigo-500 to-indigo-600 h-full rounded-full transition-all"
+                  style={{ width: `${fokusScore}%` }}
+                ></div>
+              </div>
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border inline-block text-center ${fokusPred.badge}`}>
+                {fokusPred.label}
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* SECTION 1: MATERI YANG DIPELAJARI */}
-        <div className={`rounded-xl border ${t.cardBorder} ${isDark ? 'bg-zinc-800/90' : 'bg-white'} overflow-hidden shadow-xs`}>
-          <div className={`px-4 py-2.5 ${t.sectionHeaderBg} border-b ${t.cardBorder} flex items-center gap-2`}>
-            <FileText className={`w-4 h-4 ${t.sectionHeaderText}`} />
-            <h2 className={`text-xs font-bold uppercase tracking-wider ${t.sectionHeaderText}`}>
-              Materi yang Dipelajari Hari Ini
+        {/* SECTION 1: MATERI YANG DIPELAJARI HARI INI */}
+        <div className={`rounded-xl border shadow-xs overflow-hidden ${isDark ? 'border-amber-500/30 bg-zinc-850' : 'border-slate-200 bg-white'}`}>
+          <div className={`px-4 py-2 border-b flex items-center gap-2 ${t.sectionHeaderBg} ${t.sectionBorder}`}>
+            <FileText className="w-4 h-4 text-amber-700" />
+            <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-900">
+              Materi & Pokok Bahasan Hari Ini
             </h2>
           </div>
-          <div className={`p-4 text-xs leading-relaxed whitespace-pre-line font-medium ${isDark ? 'text-zinc-200' : 'text-slate-800'}`}>
+          <div className="p-3.5 text-xs text-slate-800 leading-relaxed font-normal whitespace-pre-line">
             {report.materiDipelajari ? (
               report.materiDipelajari
             ) : (
               <span className="text-slate-400 italic">
-                Belum ada catatan materi. Masukkan topik pembelajaran hari ini pada formulir.
+                Belum ada rincian materi. Masukkan topik pembahasan sesi les pada formulir input.
               </span>
             )}
           </div>
         </div>
 
-        {/* SECTION 2: EVALUASI & PERKEMBANGAN SISWA */}
-        <div className={`rounded-xl border ${t.cardBorder} ${isDark ? 'bg-zinc-800/90' : 'bg-white'} overflow-hidden shadow-xs`}>
-          <div className={`px-4 py-2.5 ${t.sectionHeaderBg} border-b ${t.cardBorder} flex items-center gap-2`}>
-            <Sparkles className={`w-4 h-4 ${t.sectionHeaderText}`} />
-            <h2 className={`text-xs font-bold uppercase tracking-wider ${t.sectionHeaderText}`}>
-              Perkembangan & Evaluasi Siswa
+        {/* SECTION 2: EVALUASI & CATATAN PERKEMBANGAN SISWA */}
+        <div className={`rounded-xl border shadow-xs overflow-hidden ${isDark ? 'border-amber-500/30 bg-zinc-850' : 'border-slate-200 bg-white'}`}>
+          <div className={`px-4 py-2 border-b flex items-center gap-2 ${t.sectionHeaderBg} ${t.sectionBorder}`}>
+            <Sparkles className="w-4 h-4 text-amber-700" />
+            <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-900">
+              Evaluasi & Catatan Perkembangan Siswa
             </h2>
           </div>
-          <div className={`p-4 text-xs leading-relaxed whitespace-pre-line font-medium ${isDark ? 'text-zinc-200' : 'text-slate-800'}`}>
+          <div className="p-3.5 text-xs text-slate-800 leading-relaxed font-normal whitespace-pre-line border-l-4 border-amber-500/80 bg-amber-50/20 m-2 rounded-r-lg">
             {report.evaluasiSiswa ? (
               report.evaluasiSiswa
             ) : (
               <span className="text-slate-400 italic">
-                Belum ada catatan evaluasi. Ketik perkembangan keaktifan dan pemahaman siswa di atas.
+                Belum ada catatan evaluasi belajar. Masukkan observasi pengajar pada formulir di samping.
               </span>
             )}
           </div>
         </div>
 
-        {/* SECTION 3: PR / TUGAS RUMAH (IF ANY) */}
-        {report.tugasRumah && report.tugasRumah.trim() !== '' && (
-          <div className={`rounded-xl border overflow-hidden shadow-xs ${isDark ? 'border-amber-500/40 bg-amber-950/30' : 'border-amber-200 bg-amber-50/40'}`}>
-            <div className={`px-4 py-2 border-b flex items-center gap-2 ${isDark ? 'bg-amber-500/20 border-amber-500/40' : 'bg-amber-100/60 border-amber-200'}`}>
-              <BookOpen className={`w-3.5 h-3.5 ${isDark ? 'text-amber-300' : 'text-amber-800'}`} />
-              <h2 className={`text-[11px] font-bold uppercase tracking-wider ${isDark ? 'text-amber-200' : 'text-amber-900'}`}>
-                PR / Tugas Rumah
-              </h2>
-            </div>
-            <div className={`p-3.5 text-xs whitespace-pre-line font-medium leading-relaxed ${isDark ? 'text-amber-100' : 'text-slate-800'}`}>
-              {report.tugasRumah}
-            </div>
+        {/* CONDITIONAL SECTION: PR & CATATAN ORANG TUA */}
+        {(report.tugasRumah || report.catatanOrangTua) && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {report.tugasRumah && (
+              <div className="p-3 rounded-xl border border-amber-200 bg-amber-50/40 text-xs">
+                <div className="flex items-center gap-1.5 font-bold text-amber-950 uppercase tracking-wider text-[11px] mb-1">
+                  <BookOpen className="w-3.5 h-3.5 text-amber-700" />
+                  <span>PR / Tugas Tindak Lanjut</span>
+                </div>
+                <div className="text-slate-800 whitespace-pre-line leading-relaxed font-medium">
+                  {report.tugasRumah}
+                </div>
+              </div>
+            )}
+
+            {report.catatanOrangTua && (
+              <div className="p-3 rounded-xl border border-slate-200 bg-slate-50/80 text-xs">
+                <div className="flex items-center gap-1.5 font-bold text-slate-900 uppercase tracking-wider text-[11px] mb-1">
+                  <MessageSquareQuote className="w-3.5 h-3.5 text-slate-600" />
+                  <span>Pesan Khusus Orang Tua</span>
+                </div>
+                <div className="text-slate-700 italic whitespace-pre-line leading-relaxed font-medium">
+                  "{report.catatanOrangTua}"
+                </div>
+              </div>
+            )}
           </div>
         )}
 
-        {/* SECTION 4: CATATAN UTK ORANG TUA (IF ANY) */}
-        {report.catatanOrangTua && report.catatanOrangTua.trim() !== '' && (
-          <div className={`rounded-xl border overflow-hidden shadow-xs ${isDark ? 'border-zinc-700 bg-zinc-800/80' : 'border-slate-200 bg-slate-50'}`}>
-            <div className={`px-4 py-2 border-b flex items-center gap-2 ${isDark ? 'bg-zinc-700/60 border-zinc-700' : 'bg-slate-200/60 border-slate-200'}`}>
-              <MessageSquareQuote className={`w-3.5 h-3.5 ${isDark ? 'text-amber-300' : 'text-slate-700'}`} />
-              <h2 className={`text-[11px] font-bold uppercase tracking-wider ${isDark ? 'text-amber-200' : 'text-slate-800'}`}>
-                Catatan Khusus Orang Tua
-              </h2>
-            </div>
-            <div className={`p-3.5 text-xs whitespace-pre-line italic leading-relaxed ${isDark ? 'text-zinc-200' : 'text-slate-700'}`}>
-              "{report.catatanOrangTua}"
-            </div>
-          </div>
-        )}
-
-        {/* SECTION 5: DOKUMENTASI FOTO KEGIATAN LES (IF ANY) */}
+        {/* SECTION 5: DOKUMENTASI FOTO BERLOGO RESMI */}
         {report.fotoDokumentasi && report.fotoDokumentasi.length > 0 && (
-          <div className={`rounded-xl border overflow-hidden shadow-xs ${isDark ? 'border-amber-500/40 bg-zinc-800/90' : 'border-slate-200 bg-white'}`}>
-            <div className={`px-4 py-2 border-b flex items-center justify-between ${t.sectionHeaderBg} ${t.cardBorder}`}>
-              <div className="flex items-center gap-2">
-                <Camera className={`w-3.5 h-3.5 ${t.sectionHeaderText}`} />
-                <h2 className={`text-[11px] font-bold uppercase tracking-wider ${t.sectionHeaderText}`}>
-                  Dokumentasi Foto Sesi Les (Template Berlogo Resmi)
+          <div className={`rounded-xl border shadow-xs overflow-hidden ${isDark ? 'border-amber-500/30 bg-zinc-850' : 'border-slate-200 bg-white'}`}>
+            <div className={`px-4 py-2 border-b flex items-center justify-between ${t.sectionHeaderBg} ${t.sectionBorder}`}>
+              <div className="flex items-center gap-1.5">
+                <Camera className="w-3.5 h-3.5 text-amber-700" />
+                <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-900">
+                  Dokumentasi Pembelajaran Berlogo Resmi
                 </h2>
               </div>
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${t.badgeBg} border ${t.badgeBorder}`}>
-                {report.fotoDokumentasi.length} Foto Lampiran
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300">
+                {report.fotoDokumentasi.length} Foto Terlampir
               </span>
             </div>
 
-            <div className="p-3.5 grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div className="p-3 grid grid-cols-2 sm:grid-cols-3 gap-2.5">
               {report.fotoDokumentasi.map((photo, idx) => (
-                <div key={photo.id || idx} className="rounded-xl border border-amber-200/80 overflow-hidden bg-white shadow-2xs flex flex-col">
-                  {/* BRANDED TEMPLATE HEADER ON EACH PHOTO WITH OFFICIAL LOGO */}
-                  <div className="bg-gradient-to-r from-slate-900 via-amber-950 to-slate-900 text-white px-2 py-1.5 flex items-center justify-between border-b border-amber-500/30">
-                    <div className="flex items-center gap-1.5 min-w-0">
+                <div key={photo.id || idx} className="rounded-lg border border-amber-200 overflow-hidden bg-white shadow-2xs flex flex-col">
+                  {/* BRANDED HEADER ON FOTO */}
+                  <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-amber-950 text-white px-2 py-1 flex items-center justify-between border-b border-amber-500/30">
+                    <div className="flex items-center gap-1 min-w-0">
                       <img
                         src="/assets/aistudio/Logo_Pendidikan_Dessa_Mentari_6f1f1e2d.png"
                         alt="Logo"
                         crossOrigin="anonymous"
                         loading="eager"
-                        className="w-4 h-4 object-contain shrink-0"
+                        className="w-3.5 h-3.5 object-contain shrink-0"
                       />
-                      <span className="font-extrabold text-[9px] text-amber-200 truncate font-serif-brand">
-                        Dessa Mentari Education
+                      <span className="font-bold text-[8.5px] text-amber-200 truncate font-serif-brand">
+                        Dessa Mentari
                       </span>
                     </div>
-                    <span className="text-[7.5px] font-semibold text-amber-300 bg-amber-400/20 px-1 py-0.2 rounded border border-amber-400/30 shrink-0">
+                    <span className="text-[7px] font-semibold text-amber-300 bg-amber-400/20 px-1 rounded">
                       Keluarga Indonesia
                     </span>
                   </div>
 
-                  {/* Photo Display */}
+                  {/* Photo Thumbnail */}
                   <div className="aspect-4/3 w-full bg-slate-100 overflow-hidden relative">
                     <img
                       src={photo.url}
@@ -413,14 +498,14 @@ export const ReportCard: React.FC<ReportCardProps> = ({ report }) => {
                     />
                   </div>
 
-                  {/* Caption & Metadata Footer */}
-                  <div className="p-2 text-[9px] font-medium text-slate-700 bg-slate-50/80 border-t border-slate-100 space-y-0.5">
-                    <div className="font-semibold text-slate-900 truncate">
+                  {/* Caption */}
+                  <div className="p-1.5 text-[8.5px] text-slate-700 bg-slate-50 border-t border-slate-100">
+                    <div className="font-bold text-slate-900 truncate">
                       {photo.caption || 'Dokumentasi Kegiatan Les'}
                     </div>
-                    <div className="flex items-center justify-between text-[8px] text-slate-400">
+                    <div className="text-[7.5px] text-slate-400 flex justify-between">
                       <span>{report.namaSiswa}</span>
-                      <span className="text-amber-800 font-bold">{report.tanggal}</span>
+                      <span>{report.tanggal}</span>
                     </div>
                   </div>
                 </div>
@@ -429,44 +514,63 @@ export const ReportCard: React.FC<ReportCardProps> = ({ report }) => {
           </div>
         )}
 
-        {/* SIGNATURE & BRAND FOOTER WITH SMALL LOGO */}
-        <div className={`pt-4 border-t flex items-end justify-between text-xs ${isDark ? 'border-zinc-800' : 'border-slate-200'}`}>
+        {/* FORMAL ENDORSEMENT & SIGNATURE BLOCK */}
+        <div className="pt-3 border-t border-slate-200 grid grid-cols-2 gap-4 items-end text-xs">
+          {/* Left: Institutional Seal & Parent Acknowledgment */}
           <div className="space-y-1">
-            <div className={`flex items-center gap-2 font-semibold text-[11px] ${isDark ? 'text-amber-300' : 'text-slate-700'}`}>
-              <img
-                src="/assets/aistudio/Logo_Pendidikan_Dessa_Mentari_6f1f1e2d.png"
-                alt="Logo"
-                crossOrigin="anonymous"
-                loading="eager"
-                className="w-5 h-5 object-contain"
-              />
-              <span>Dessa Mentari Education</span>
+            <div className="flex items-center gap-2">
+              {/* Circular Gold Seal Graphic */}
+              <div className="w-10 h-10 rounded-full border-2 border-dashed border-amber-600/70 p-0.5 flex items-center justify-center bg-amber-50">
+                <div className="w-full h-full rounded-full bg-amber-600/10 flex flex-col items-center justify-center text-[7px] font-black text-amber-900 text-center leading-tight">
+                  <span>RESMI</span>
+                  <span className="text-[6px] text-amber-700">DME</span>
+                </div>
+              </div>
+              <div>
+                <span className="text-[10px] font-extrabold uppercase tracking-wider block text-slate-700">
+                  Dessa Mentari Education
+                </span>
+                <span className="text-[9px] text-slate-500 block leading-tight">
+                  Pusat Bimbingan Belajar & Les Privat Terpadu
+                </span>
+              </div>
             </div>
-            <p className={`text-[10px] ${isDark ? 'text-zinc-400' : 'text-slate-400'}`}>
-              Tempat Belajar Terpercaya · Les Privat Keluarga Indonesia
-            </p>
+            <div className="pt-2 text-[10px] text-slate-500 italic">
+              Mengetahui Orang Tua / Wali Siswa
+            </div>
           </div>
 
-          <div className="text-right">
-            <span className={`text-[10px] block mb-1 uppercase tracking-wider font-semibold ${isDark ? 'text-zinc-400' : 'text-slate-400'}`}>
-              Pengajar / Tutor
+          {/* Right: Tutor Signature Block */}
+          <div className="text-right space-y-1">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 block">
+              Pengajar / Tutor Pendamping
             </span>
-            <p className={`font-bold pb-0.5 min-w-[120px] ${isDark ? 'text-amber-300 border-b-2 border-amber-500/60' : 'text-slate-900 border-b-2 border-slate-300'}`}>
+            <div className="h-8 flex items-center justify-end">
+              <span className="text-[11px] font-mono text-amber-800 font-bold bg-amber-50/60 px-2 py-0.5 rounded border border-amber-200/60">
+                [ Terverifikasi Digital ]
+              </span>
+            </div>
+            <p className="font-extrabold text-slate-900 text-[12px] border-b-2 border-slate-400 pb-0.5 inline-block min-w-[140px]">
               {report.namaPengajar || 'Pengajar Dessa Mentari'}
             </p>
+            <span className="text-[9px] text-slate-400 block">
+              ID Sertifikasi Tutor DME
+            </span>
           </div>
         </div>
       </div>
 
-      {/* FOOTER BADGE BAR */}
-      <div className={`${t.footerBg} px-6 py-3 flex items-center justify-between text-[11px]`}>
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-amber-400"></span>
-          <span className="font-medium">Dokumen Resmi Laporan Belajar</span>
+      {/* SECURITY FOOTER BAR */}
+      <div className={`${t.footerBg} px-5 py-2.5 flex flex-wrap items-center justify-between text-[10px] border-t border-amber-500/20`}>
+        <div className="flex items-center gap-1.5">
+          <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+          <span className="font-medium">
+            Dokumen Evaluasi Sah Diterbitkan oleh Dessa Mentari Education
+          </span>
         </div>
-        <span className="text-white/60 text-[10px] font-mono">
-          REF: DME-{new Date().getFullYear()}-{(report.namaSiswa || 'REV').substring(0, 3).toUpperCase()}
-        </span>
+        <div className="text-white/60 font-mono text-[9px]">
+          VERIFIED ARCHIVE · {serialNo}
+        </div>
       </div>
     </div>
   );

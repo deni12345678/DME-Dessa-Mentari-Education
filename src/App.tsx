@@ -47,7 +47,9 @@ import {
   Cloud,
   X,
   ExternalLink,
-  FileText
+  FileText,
+  Loader2,
+  Sparkles
 } from 'lucide-react';
 
 const DEFAULT_SETTINGS: TeacherSettings = {
@@ -992,6 +994,31 @@ export default function App() {
         isOpen={isInstallModalOpen}
         onClose={() => setIsInstallModalOpen(false)}
       />
+
+      {/* RESPONSIVE DOWNLOAD PROCESSING OVERLAY */}
+      {(downloading || downloadingPdf) && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 shadow-2xl max-w-sm w-full text-center space-y-3 border border-amber-300">
+            <div className="w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto">
+              <Loader2 className="w-6 h-6 animate-spin" />
+            </div>
+            <h4 className="text-base font-extrabold text-slate-900 font-serif-brand">
+              {downloadingPdf ? 'Menyusun Dokumen PDF Resmi...' : 'Menyiapkan Gambar Laporan...'}
+            </h4>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              {downloadingPdf 
+                ? 'Memformat berkas ke ukuran standar A4 presisi satu halaman agar rapi saat dicetak atau disimpan.' 
+                : 'Merender kartu beresolusi tinggi dengan logo resmi untuk kemudahan dibagikan ke WhatsApp.'}
+            </p>
+            <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+              <div className="bg-gradient-to-r from-amber-500 to-amber-600 h-full w-3/4 animate-pulse rounded-full"></div>
+            </div>
+            <span className="text-[10px] text-slate-400 block pt-1">
+              Mohon tunggu beberapa detik...
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* FOOTER */}
       <footer className="bg-white border-t border-slate-200 py-4 mt-auto no-print">

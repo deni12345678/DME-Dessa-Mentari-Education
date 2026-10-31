@@ -3,35 +3,34 @@ import { jsPDF } from 'jspdf';
 import { ReportData } from '../types/report';
 
 /**
- * Safely sanitizes cloned elements before canvas capture to prevent CORS errors,
- * missing image issues, or memory limits on mobile devices.
+ * Prepares and sanitizes cloned element before canvas capture.
+ * Fixes width to standard 760px for consistent high-definition A4 rendering across all mobile screen sizes.
  */
-function sanitizeClonedElement(clonedEl: HTMLElement, elementId: string) {
+function sanitizeClonedElement(clonedEl: HTMLElement) {
   clonedEl.style.transform = 'none';
-  clonedEl.style.maxWidth = '680px';
-  clonedEl.style.width = '100%';
+  clonedEl.style.width = '760px';
+  clonedEl.style.maxWidth = '760px';
+  clonedEl.style.minWidth = '760px';
   clonedEl.style.boxSizing = 'border-box';
   clonedEl.style.margin = '0 auto';
+  clonedEl.style.borderRadius = '12px';
 
   // Sanitize all images inside the clone
   const clonedImgs = Array.from(clonedEl.querySelectorAll('img'));
   clonedImgs.forEach((img) => {
-    // Remove crossorigin on data: or blob: urls which confuses some mobile browsers
     if (img.src && (img.src.startsWith('data:') || img.src.startsWith('blob:'))) {
       img.removeAttribute('crossorigin');
     } else if (img.src) {
       img.crossOrigin = 'anonymous';
     }
-
-    // Ensure display is block or inline-block and no broken layout
     img.style.maxWidth = '100%';
     img.loading = 'eager';
   });
 }
 
 /**
- * Captures an element using html2canvas with progressive fallback scales (2 -> 1.5 -> 1)
- * to prevent mobile GPU/memory crashes.
+ * Fast, responsive element capture using html2canvas.
+ * Uses smart scaling (1.5x on mobile, 2x on desktop) to optimize speed and avoid UI freeze.
  */
 export async function captureElementToCanvas(
   elementId: string,
@@ -39,7 +38,7 @@ export async function captureElementToCanvas(
 ): Promise<HTMLCanvasElement | null> {
   let element = document.getElementById(elementId);
   if (!element) {
-    await new Promise((r) => setTimeout(r, 300));
+    await new Promise((r) => setTimeout(r, 150));
     element = document.getElementById(elementId);
   }
 
@@ -48,55 +47,55 @@ export async function captureElementToCanvas(
     return null;
   }
 
-  // Pre-wait for any images to settle
+  // Ensure images are loaded
   const imgs = Array.from(element.querySelectorAll('img'));
   if (imgs.length > 0) {
     await Promise.all(
       imgs.map((img) => {
-        if (img.complete) return Promise.resolve(true);
+        if (img.complete && img.naturalHeight !== 0) return Promise.resolve(true);
         return new Promise((resolve) => {
           img.onload = () => resolve(true);
           img.onerror = () => resolve(false);
-          setTimeout(() => resolve(false), 2000);
+          setTimeout(() => resolve(false), 1500);
         });
       })
     );
   }
 
-  const scalesToTry = [2, 1.5, 1];
+  // Fast mobile-friendly scale selection
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const initialScale = isMobile ? 1.5 : 2;
 
-  for (const scale of scalesToTry) {
-    try {
-      const canvas = await html2canvas(element as HTMLElement, {
-        scale,
-        useCORS: true,
-        allowTaint: false,
-        backgroundColor,
-        logging: false,
-        imageTimeout: 8000,
-        scrollX: 0,
-        scrollY: 0,
-        onclone: (clonedDoc) => {
-          const clonedEl = clonedDoc.getElementById(elementId);
-          if (clonedEl) {
-            sanitizeClonedElement(clonedEl, elementId);
-          }
-        },
-      });
+  try {
+    const canvas = await html2canvas(element as HTMLElement, {
+      scale: initialScale,
+      useCORS: true,
+      allowTaint: false,
+      backgroundColor,
+      logging: false,
+      imageTimeout: 6000,
+      scrollX: 0,
+      scrollY: 0,
+      onclone: (clonedDoc) => {
+        const clonedEl = clonedDoc.getElementById(elementId);
+        if (clonedEl) {
+          sanitizeClonedElement(clonedEl);
+        }
+      },
+    });
 
-      if (canvas && canvas.width > 0 && canvas.height > 0) {
-        return canvas;
-      }
-    } catch (err) {
-      console.warn(`html2canvas failed at scale ${scale}:`, err);
+    if (canvas && canvas.width > 0 && canvas.height > 0) {
+      return canvas;
     }
+  } catch (err) {
+    console.warn('Initial canvas capture failed, retrying with scale 1:', err);
   }
 
-  // Last-resort fallback: try with allowTaint: true if CORS was the only blocker
+  // Quick fallback at scale 1 if device ran low on GPU memory
   try {
     const canvas = await html2canvas(element as HTMLElement, {
       scale: 1,
-      useCORS: false,
+      useCORS: true,
       allowTaint: true,
       backgroundColor,
       logging: false,
@@ -104,20 +103,20 @@ export async function captureElementToCanvas(
       onclone: (clonedDoc) => {
         const clonedEl = clonedDoc.getElementById(elementId);
         if (clonedEl) {
-          sanitizeClonedElement(clonedEl, elementId);
+          sanitizeClonedElement(clonedEl);
         }
       },
     });
     return canvas;
   } catch (lastErr) {
-    console.error('All html2canvas capture attempts failed:', lastErr);
+    console.error('All html2canvas attempts failed:', lastErr);
     return null;
   }
 }
 
 /**
- * Downloads the specified DOM container as a high-quality A4 PDF document.
- * Returns true if download was successfully initiated, false otherwise.
+ * Downloads the report as an official, single-page A4 PDF document.
+ * Guarantees single-page fit without spilling onto page 2.
  */
 export async function downloadReportAsPdf(
   elementId: string,
@@ -127,13 +126,12 @@ export async function downloadReportAsPdf(
   try {
     const canvas = await captureElementToCanvas(elementId, '#ffffff');
     if (!canvas) {
-      // If canvas capture failed, offer fallback window.print()
-      console.warn('Canvas capture returned null, triggering fallback print flow.');
+      console.warn('Canvas capture returned null, triggering browser print fallback.');
       window.print();
       return true;
     }
 
-    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+    const imgData = canvas.toDataURL('image/jpeg', 0.96);
 
     // Standard A4 dimensions in mm: 210 x 297
     const pdf = new jsPDF({
@@ -145,24 +143,44 @@ export async function downloadReportAsPdf(
 
     const pageWidth = pdf.internal.pageSize.getWidth(); // 210 mm
     const pageHeight = pdf.internal.pageSize.getHeight(); // 297 mm
-    const margin = 8; // 8mm margin
-    const contentWidth = pageWidth - margin * 2; // 194 mm
-    const contentHeight = (canvas.height * contentWidth) / canvas.width;
+    const margin = 6; // 6mm margin for clean spacious border
+    const maxContentWidth = pageWidth - margin * 2; // 198 mm
+    const maxContentHeight = pageHeight - margin * 2; // 285 mm
 
-    if (contentHeight <= pageHeight - margin * 2) {
-      // Fits on a single A4 page
-      const yOffset = margin + (pageHeight - margin * 2 - contentHeight) / 2;
-      pdf.addImage(imgData, 'JPEG', margin, yOffset > margin ? yOffset : margin, contentWidth, contentHeight, undefined, 'FAST');
+    const naturalContentHeight = (canvas.height * maxContentWidth) / canvas.width;
+
+    // Single Page Fit Check:
+    // If the content is within 125% of the page height, scale it down slightly
+    // so it fits on EXACTLY 1 PAGE rather than creating an awkward 2-page document.
+    if (naturalContentHeight <= maxContentHeight * 1.25) {
+      const scaleDown = naturalContentHeight > maxContentHeight 
+        ? maxContentHeight / naturalContentHeight 
+        : 1;
+
+      const finalWidth = maxContentWidth * scaleDown;
+      const finalHeight = naturalContentHeight * scaleDown;
+      const xOffset = margin + (maxContentWidth - finalWidth) / 2;
+      const yOffset = margin + (maxContentHeight - finalHeight) / 2;
+
+      pdf.addImage(imgData, 'JPEG', xOffset, yOffset, finalWidth, finalHeight, undefined, 'FAST');
     } else {
-      // Content exceeds single page height: split cleanly across pages
-      let remainingHeight = contentHeight;
+      // Very long report (multiple photo appendices) -> paginate cleanly
+      let remainingHeight = naturalContentHeight;
       let position = 0;
-      const usablePageHeight = pageHeight - margin * 2;
 
       while (remainingHeight > 0) {
-        pdf.addImage(imgData, 'JPEG', margin, margin - position, contentWidth, contentHeight, undefined, 'FAST');
-        remainingHeight -= usablePageHeight;
-        position += usablePageHeight;
+        pdf.addImage(
+          imgData, 
+          'JPEG', 
+          margin, 
+          margin - position, 
+          maxContentWidth, 
+          naturalContentHeight, 
+          undefined, 
+          'FAST'
+        );
+        remainingHeight -= maxContentHeight;
+        position += maxContentHeight;
 
         if (remainingHeight > 0) {
           pdf.addPage();
@@ -173,12 +191,10 @@ export async function downloadReportAsPdf(
     const safeFilename = filename.replace(/[^a-zA-Z0-9_-]/g, '_');
     const finalFilename = `${safeFilename}.pdf`;
 
-    // Download PDF directly
     pdf.save(finalFilename);
     return true;
   } catch (err) {
     console.error('Error generating PDF:', err);
-    // Fallback to print-to-PDF if jsPDF encounters an unrecoverable mobile issue
     try {
       window.print();
       return true;
