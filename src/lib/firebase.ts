@@ -11,7 +11,7 @@ import {
   orderBy
 } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
-import { ReportData } from '../types/report';
+import { ReportData, StudentData } from '../types/report';
 
 const app = initializeApp(firebaseConfig);
 
@@ -56,6 +56,7 @@ export async function testConnection() {
 }
 
 const REPORTS_COLLECTION = 'reports';
+const STUDENTS_COLLECTION = 'students';
 
 // Save or update report in cloud
 export async function saveReportToCloud(report: ReportData): Promise<void> {
@@ -127,3 +128,74 @@ export function subscribeReportsFromCloud(onData: (reports: ReportData[]) => voi
     if (onError) onError(err);
   });
 }
+
+// Save or update student in cloud
+export async function saveStudentToCloud(student: StudentData): Promise<void> {
+  try {
+    const docRef = doc(db, STUDENTS_COLLECTION, student.id);
+    const cleanPayload = {
+      namaSiswa: student.namaSiswa || '',
+      panggilan: student.panggilan || '',
+      jenjang: student.jenjang || 'SD',
+      kelasGrade: student.kelasGrade || '',
+      sekolah: student.sekolah || '',
+      namaOrangTua: student.namaOrangTua || '',
+      nomorOrangTua: student.nomorOrangTua || '',
+      alamat: student.alamat || '',
+      mataPelajaran: student.mataPelajaran || '',
+      hariLes: student.hariLes || '',
+      jamLes: student.jamLes || '',
+      namaPengajar: student.namaPengajar || '',
+      status: student.status || 'Aktif',
+      catatanKhusus: student.catatanKhusus || '',
+      createdAt: student.createdAt || new Date().toISOString()
+    };
+    await setDoc(docRef, cleanPayload, { merge: true });
+  } catch (err) {
+    handleFirestoreError(err, OperationType.WRITE, `students/${student.id}`);
+  }
+}
+
+// Delete student from cloud
+export async function deleteStudentFromCloud(id: string): Promise<void> {
+  try {
+    const docRef = doc(db, STUDENTS_COLLECTION, id);
+    await deleteDoc(docRef);
+  } catch (err) {
+    handleFirestoreError(err, OperationType.DELETE, `students/${id}`);
+  }
+}
+
+// Real-time listener for registered students
+export function subscribeStudentsFromCloud(onData: (students: StudentData[]) => void, onError?: (err: Error) => void) {
+  const q = query(collection(db, STUDENTS_COLLECTION), orderBy('createdAt', 'desc'));
+  
+  return onSnapshot(q, (snapshot) => {
+    const students: StudentData[] = snapshot.docs.map(docSnap => {
+      const data = docSnap.data();
+      return {
+        id: docSnap.id,
+        namaSiswa: data.namaSiswa || '',
+        panggilan: data.panggilan || '',
+        jenjang: data.jenjang || 'SD',
+        kelasGrade: data.kelasGrade || '',
+        sekolah: data.sekolah || '',
+        namaOrangTua: data.namaOrangTua || '',
+        nomorOrangTua: data.nomorOrangTua || '',
+        alamat: data.alamat || '',
+        mataPelajaran: data.mataPelajaran || '',
+        hariLes: data.hariLes || '',
+        jamLes: data.jamLes || '',
+        namaPengajar: data.namaPengajar || '',
+        status: data.status || 'Aktif',
+        catatanKhusus: data.catatanKhusus || '',
+        createdAt: data.createdAt || new Date().toISOString()
+      };
+    });
+    onData(students);
+  }, (err) => {
+    console.error("Firestore students snapshot error:", err);
+    if (onError) onError(err);
+  });
+}
+

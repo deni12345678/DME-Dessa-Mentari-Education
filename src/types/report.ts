@@ -43,6 +43,27 @@ export interface ReportData {
   createdAt: string;
 }
 
+export type StudentStatus = 'Aktif' | 'Cuti' | 'Alumni';
+
+export interface StudentData {
+  id: string;
+  namaSiswa: string;
+  panggilan?: string;
+  jenjang: EducationLevel;
+  kelasGrade?: string;
+  sekolah?: string;
+  namaOrangTua?: string;
+  nomorOrangTua?: string;
+  alamat?: string;
+  mataPelajaran?: string;
+  hariLes?: string;
+  jamLes?: string;
+  namaPengajar?: string;
+  status: StudentStatus;
+  catatanKhusus?: string;
+  createdAt: string;
+}
+
 export interface TeacherSettings {
   namaPengajar: string;
   nomorWA?: string;

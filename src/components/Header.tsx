@@ -1,14 +1,17 @@
 import React from 'react';
-import { Download, History, Settings, FilePlus, HelpCircle, Film } from 'lucide-react';
+import { Download, History, Settings, FilePlus, HelpCircle, Film, GraduationCap } from 'lucide-react';
+
+export type ActiveTabType = 'create' | 'video' | 'students' | 'history' | 'settings' | 'guide';
 
 interface HeaderProps {
-  activeTab: 'create' | 'video' | 'history' | 'settings' | 'guide';
-  onTabChange: (tab: 'create' | 'video' | 'history' | 'settings' | 'guide') => void;
+  activeTab: ActiveTabType;
+  onTabChange: (tab: ActiveTabType) => void;
   onDownloadJpg: () => void;
   downloading: boolean;
   isCloudConnected?: boolean;
   onCopyAdminLink?: () => void;
   adminLinkCopied?: boolean;
+  studentsCount?: number;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -19,6 +22,7 @@ export const Header: React.FC<HeaderProps> = ({
   isCloudConnected = true,
   onCopyAdminLink,
   adminLinkCopied = false,
+  studentsCount,
 }) => {
   return (
     <header className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-2xs">
@@ -64,6 +68,25 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <FilePlus className="w-4 h-4" />
             <span>Input Laporan (Admin)</span>
+          </button>
+
+          <button
+            onClick={() => onTabChange('students')}
+            className={`flex items-center gap-1.5 py-1.5 transition-colors whitespace-nowrap shrink-0 ${
+              activeTab === 'students'
+                ? 'text-amber-700 font-bold border-b-2 border-amber-600'
+                : 'hover:text-slate-900'
+            }`}
+          >
+            <GraduationCap className="w-4 h-4 text-amber-600" />
+            <span className="flex items-center gap-1">
+              Siswa Terdaftar
+              {studentsCount !== undefined && (
+                <span className="text-[10px] bg-amber-100 text-amber-900 font-bold px-1.5 py-0.2 rounded-full border border-amber-300">
+                  {studentsCount}
+                </span>
+              )}
+            </span>
           </button>
 
           <button
@@ -153,6 +176,15 @@ export const Header: React.FC<HeaderProps> = ({
         >
           <FilePlus className="w-3.5 h-3.5" />
           <span>Form</span>
+        </button>
+        <button
+          onClick={() => onTabChange('students')}
+          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap ${
+            activeTab === 'students' ? 'bg-amber-100 text-amber-900 font-bold' : 'text-slate-600'
+          }`}
+        >
+          <GraduationCap className="w-3.5 h-3.5 text-amber-600" />
+          <span>Siswa</span>
         </button>
         <button
           onClick={() => onTabChange('video')}

@@ -4,7 +4,8 @@ import {
   EducationLevel, 
   SubjectOption, 
   AttendanceStatus, 
-  CardTheme 
+  CardTheme,
+  StudentData 
 } from '../types/report';
 import { 
   User, 
@@ -16,13 +17,15 @@ import {
   TrendingUp,
   Award,
   Target,
-  UserCheck
+  UserCheck,
+  GraduationCap
 } from 'lucide-react';
 
 interface ReportFormProps {
   report: ReportData;
   onChange: (updated: Partial<ReportData>) => void;
   onOpenAiAssistant: () => void;
+  registeredStudents?: StudentData[];
 }
 
 const EDUCATION_LEVELS: EducationLevel[] = ['TK', 'SD', 'SMP', 'SMA', 'Umum/PAUD'];
@@ -68,10 +71,21 @@ export const ReportForm: React.FC<ReportFormProps> = ({
   report,
   onChange,
   onOpenAiAssistant,
+  registeredStudents = [],
 }) => {
   const [isCustomTeacher, setIsCustomTeacher] = useState(() => {
     return !!report.namaPengajar && !PRESET_TEACHERS.includes(report.namaPengajar);
   });
+
+  const handleSelectRegisteredStudent = (s: StudentData) => {
+    onChange({
+      namaSiswa: s.namaSiswa,
+      jenjang: s.jenjang,
+      ...(s.kelasGrade ? { kelasGrade: s.kelasGrade } : {}),
+      ...(s.namaPengajar ? { namaPengajar: s.namaPengajar } : {}),
+      ...(s.mataPelajaran ? { mataPelajaran: s.mataPelajaran } : {}),
+    });
+  };
 
   const handleAddPresetEval = (presetText: string) => {
     const current = report.evaluasiSiswa || '';
@@ -179,10 +193,18 @@ export const ReportForm: React.FC<ReportFormProps> = ({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Nama Siswa */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Nama Siswa <span className="text-red-500">*</span>
-            </label>
+          <div className="sm:col-span-1 space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-semibold text-slate-700">
+                Nama Siswa <span className="text-red-500">*</span>
+              </label>
+              {registeredStudents.some((s) => s.namaSiswa.toLowerCase() === report.namaSiswa.toLowerCase()) && (
+                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                  ✓ Siswa Terdaftar
+                </span>
+              )}
+            </div>
+
             <input
               type="text"
               value={report.namaSiswa}
@@ -190,6 +212,32 @@ export const ReportForm: React.FC<ReportFormProps> = ({
               placeholder="Contoh: Ananda Kevin Pratama"
               className="w-full text-xs p-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
             />
+
+            {/* Quick Registered Student Selector */}
+            {registeredStudents.length > 0 && (
+              <div className="pt-1">
+                <span className="text-[10px] font-medium text-slate-400 block mb-1 flex items-center gap-1">
+                  <GraduationCap className="w-3 h-3 text-amber-600" />
+                  Pilih Cepat dari Siswa Terdaftar:
+                </span>
+                <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto">
+                  {registeredStudents.slice(0, 6).map((st) => (
+                    <button
+                      key={st.id}
+                      type="button"
+                      onClick={() => handleSelectRegisteredStudent(st)}
+                      className={`text-[10px] font-semibold px-2 py-1 rounded-lg border transition-all ${
+                        report.namaSiswa.toLowerCase() === st.namaSiswa.toLowerCase()
+                          ? 'bg-amber-600 text-white border-amber-600 shadow-2xs font-bold'
+                          : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-amber-100 hover:text-amber-900'
+                      }`}
+                    >
+                      {st.panggilan || st.namaSiswa} ({st.jenjang})
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Tanggal Pembelajaran */}

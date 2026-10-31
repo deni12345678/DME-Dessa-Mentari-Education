@@ -24,9 +24,23 @@ service cloud.firestore {
       (data.skorFokus is number || data.skorFokus is int);
     }
 
+    function isValidStudent(data) {
+      return data.keys().hasAll(['namaSiswa', 'jenjang', 'status', 'createdAt']) &&
+      data.namaSiswa is string && data.namaSiswa.size() > 0 && data.namaSiswa.size() <= 100 &&
+      data.jenjang is string &&
+      data.status is string &&
+      data.createdAt is string;
+    }
+
     match /reports/{reportId} {
       allow read: if true;
       allow create, update: if isValidReport(request.resource.data);
+      allow delete: if true;
+    }
+
+    match /students/{studentId} {
+      allow read: if true;
+      allow create, update: if isValidStudent(request.resource.data);
       allow delete: if true;
     }
   }

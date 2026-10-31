@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ReportData, TeacherSettings } from './types/report';
-import { Header } from './components/Header';
+import { ReportData, TeacherSettings, StudentData } from './types/report';
+import { Header, ActiveTabType } from './components/Header';
 import { ReportForm } from './components/ReportForm';
 import { ReportCard } from './components/ReportCard';
 import { AiAssistantModal } from './components/AiAssistantModal';
@@ -9,6 +9,7 @@ import { SettingsView } from './components/SettingsView';
 import { GuideView } from './components/GuideView';
 import { AiVideoStudio } from './components/AiVideoStudio';
 import { StatsSummaryPanel } from './components/StatsSummaryPanel';
+import { StudentManagementView } from './components/StudentManagementView';
 import { 
   downloadReportAsImage, 
   copyWhatsAppTextToClipboard, 
@@ -18,7 +19,10 @@ import {
   testConnection,
   saveReportToCloud,
   deleteReportFromCloud,
-  subscribeReportsFromCloud
+  subscribeReportsFromCloud,
+  saveStudentToCloud,
+  deleteStudentFromCloud,
+  subscribeStudentsFromCloud
 } from './lib/firebase';
 import { 
   Download, 
@@ -121,8 +125,83 @@ const SEED_REPORTS: ReportData[] = [
   },
 ];
 
+const SEED_STUDENTS: StudentData[] = [
+  {
+    id: 'STU-001',
+    namaSiswa: 'Ananda Kevin Pratama',
+    panggilan: 'Kevin',
+    jenjang: 'SD',
+    kelasGrade: 'Kelas 4 SD',
+    sekolah: 'SDN Mentari 01',
+    namaOrangTua: 'Ibu Ratna',
+    nomorOrangTua: '081234567890',
+    alamat: 'Jl. Mentari Raya No. 12',
+    mataPelajaran: 'Matematika & Bahasa Inggris',
+    hariLes: 'Senin & Kamis',
+    jamLes: '15.30 - 17.00 WIB',
+    namaPengajar: 'Sarah Syahidah Syahrudin, S.Pd',
+    status: 'Aktif',
+    catatanKhusus: 'Sangat menyukai soal gambar & matematika. Sangat cepat paham jika diberi ilustrasi visual.',
+    createdAt: '2026-10-01T08:00:00.000Z',
+  },
+  {
+    id: 'STU-002',
+    namaSiswa: 'Siti Aisyah',
+    panggilan: 'Aisyah',
+    jenjang: 'SMP',
+    kelasGrade: 'Kelas 8 SMP',
+    sekolah: 'SMP Negeri 2',
+    namaOrangTua: 'Bpk. Ahmad',
+    nomorOrangTua: '085711223344',
+    alamat: 'Komp. Dessa Asri Blok B3',
+    mataPelajaran: 'IPA & Fisika',
+    hariLes: 'Selasa & Jumat',
+    jamLes: '16.00 - 17.30 WIB',
+    namaPengajar: 'Deni Santoso, M.M',
+    status: 'Aktif',
+    catatanKhusus: 'Fokus tinggi dan mandiri. Rajin mengerjakan tugas praktikum IPA.',
+    createdAt: '2026-10-02T08:00:00.000Z',
+  },
+  {
+    id: 'STU-003',
+    namaSiswa: 'Bimo Utomo',
+    panggilan: 'Bimo',
+    jenjang: 'SMA',
+    kelasGrade: 'Kelas 11 SMA',
+    sekolah: 'SMA Negeri 1',
+    namaOrangTua: 'Ibu Dewi',
+    nomorOrangTua: '081987654321',
+    alamat: 'Jl. Kebon Jeruk No. 45',
+    mataPelajaran: 'Kimia & Matematika Lanjut',
+    hariLes: 'Rabu & Sabtu',
+    jamLes: '18.30 - 20.00 WIB',
+    namaPengajar: 'Deni Santoso, M.M',
+    status: 'Aktif',
+    catatanKhusus: 'Persiapan SNBT & Ujian Sekolah.',
+    createdAt: '2026-10-05T08:00:00.000Z',
+  },
+  {
+    id: 'STU-004',
+    namaSiswa: 'Clarissa Puteri',
+    panggilan: 'Caca',
+    jenjang: 'TK',
+    kelasGrade: 'TK B',
+    sekolah: 'TK Pembina',
+    namaOrangTua: 'Ibu Maya',
+    nomorOrangTua: '087766554433',
+    alamat: 'Jl. Bunga Melati No. 8',
+    mataPelajaran: 'Calistung / Cisritung',
+    hariLes: 'Senin & Rabu',
+    jamLes: '14.00 - 15.15 WIB',
+    namaPengajar: 'Sarah Syahidah Syahrudin, S.Pd',
+    status: 'Aktif',
+    catatanKhusus: 'Belajar membaca & mewarnai angka. Perlu variasi media belajar lagu anak.',
+    createdAt: '2026-10-08T08:00:00.000Z',
+  },
+];
+
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'create' | 'video' | 'history' | 'settings' | 'guide'>('create');
+  const [activeTab, setActiveTab] = useState<ActiveTabType>('create');
   const [settings, setSettings] = useState<TeacherSettings>(() => {
     const saved = localStorage.getItem('dme_teacher_settings');
     return saved ? JSON.parse(saved) : DEFAULT_SETTINGS;
@@ -162,6 +241,11 @@ export default function App() {
     return saved ? JSON.parse(saved) : SEED_REPORTS;
   });
 
+  const [students, setStudents] = useState<StudentData[]>(() => {
+    const saved = localStorage.getItem('dme_registered_students');
+    return saved ? JSON.parse(saved) : SEED_STUDENTS;
+  });
+
   const [downloading, setDownloading] = useState(false);
   const [copiedSuccess, setCopiedSuccess] = useState(false);
   const [saveReportSuccess, setSaveReportSuccess] = useState(false);
@@ -177,11 +261,11 @@ export default function App() {
     setTimeout(() => setAdminLinkCopied(false), 2500);
   };
 
-  // Initialize Firebase Cloud test and subscribe to real-time reports
+  // Initialize Firebase Cloud test and subscribe to real-time reports & students
   useEffect(() => {
     testConnection();
 
-    const unsubscribe = subscribeReportsFromCloud(
+    const unsubscribeReports = subscribeReportsFromCloud(
       (cloudReports) => {
         setIsCloudSyncing(false);
         if (cloudReports.length > 0) {
@@ -194,12 +278,31 @@ export default function App() {
         }
       },
       (err) => {
-        console.warn('Firebase sync listener warning:', err);
+        console.warn('Firebase reports sync listener warning:', err);
         setIsCloudSyncing(false);
       }
     );
 
-    return () => unsubscribe();
+    const unsubscribeStudents = subscribeStudentsFromCloud(
+      (cloudStudents) => {
+        if (cloudStudents.length > 0) {
+          setStudents(cloudStudents);
+        } else {
+          // Seed cloud with initial registered students
+          SEED_STUDENTS.forEach((seed) => {
+            saveStudentToCloud(seed).catch(console.error);
+          });
+        }
+      },
+      (err) => {
+        console.warn('Firebase students sync listener warning:', err);
+      }
+    );
+
+    return () => {
+      unsubscribeReports();
+      unsubscribeStudents();
+    };
   }, []);
 
   // Parse URL query parameter for direct report link (e.g. ?reportId=RPT-101)
@@ -223,6 +326,47 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('dme_saved_reports', JSON.stringify(savedReports));
   }, [savedReports]);
+
+  // Sync registered students to localStorage
+  useEffect(() => {
+    localStorage.setItem('dme_registered_students', JSON.stringify(students));
+  }, [students]);
+
+  const handleSaveStudent = (studentToSave: StudentData) => {
+    setStudents((prev) => {
+      const idx = prev.findIndex((s) => s.id === studentToSave.id);
+      if (idx >= 0) {
+        const copy = [...prev];
+        copy[idx] = studentToSave;
+        return copy;
+      }
+      return [studentToSave, ...prev];
+    });
+
+    // Save to Cloud Firestore
+    saveStudentToCloud(studentToSave).catch((err) => {
+      console.error('Failed to sync student to cloud:', err);
+    });
+  };
+
+  const handleDeleteStudent = (id: string) => {
+    setStudents((prev) => prev.filter((s) => s.id !== id));
+    deleteStudentFromCloud(id).catch((err) => {
+      console.error('Failed to delete student from cloud:', err);
+    });
+  };
+
+  const handleSelectStudentForReport = (student: StudentData) => {
+    setReport((prev) => ({
+      ...prev,
+      namaSiswa: student.namaSiswa,
+      jenjang: student.jenjang,
+      kelasGrade: student.kelasGrade || prev.kelasGrade,
+      namaPengajar: student.namaPengajar || prev.namaPengajar,
+      mataPelajaran: student.mataPelajaran || prev.mataPelajaran,
+    }));
+    setActiveTab('create');
+  };
 
   const handleReportChange = (updated: Partial<ReportData>) => {
     setReport((prev) => ({ ...prev, ...updated }));
@@ -329,6 +473,7 @@ export default function App() {
         downloading={downloading}
         onCopyAdminLink={handleCopyAdminPortalLink}
         adminLinkCopied={adminLinkCopied}
+        studentsCount={students.length}
       />
 
       {/* MAIN CONTAINER */}
@@ -374,6 +519,7 @@ export default function App() {
                   report={report}
                   onChange={handleReportChange}
                   onOpenAiAssistant={() => setIsAiModalOpen(true)}
+                  registeredStudents={students}
                 />
 
                 {/* Reset & Quick Actions Bar */}
@@ -488,6 +634,16 @@ export default function App() {
             reports={savedReports}
             onSelectReport={handleSelectFromHistory}
             onDeleteReport={handleDeleteHistoryReport}
+          />
+        )}
+
+        {activeTab === 'students' && (
+          <StudentManagementView
+            students={students}
+            reports={savedReports}
+            onSaveStudent={handleSaveStudent}
+            onDeleteStudent={handleDeleteStudent}
+            onSelectStudentForReport={handleSelectStudentForReport}
           />
         )}
 

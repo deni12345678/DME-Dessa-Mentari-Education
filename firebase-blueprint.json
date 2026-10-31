@@ -84,6 +84,87 @@
         "skorFokus",
         "createdAt"
       ]
+    },
+    "Student": {
+      "title": "Siswa Terdaftar Les Privat",
+      "description": "Data profil siswa terdaftar di Dessa Mentari Education",
+      "type": "object",
+      "properties": {
+        "namaSiswa": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Nama lengkap siswa"
+        },
+        "panggilan": {
+          "type": "string",
+          "maxLength": 50,
+          "description": "Nama panggilan siswa"
+        },
+        "jenjang": {
+          "type": "string",
+          "description": "Jenjang pendidikan (TK, SD, SMP, SMA, Umum)"
+        },
+        "kelasGrade": {
+          "type": "string",
+          "maxLength": 50,
+          "description": "Kelas atau grade siswa"
+        },
+        "sekolah": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Nama sekolah asal siswa"
+        },
+        "namaOrangTua": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Nama orang tua / wali siswa"
+        },
+        "nomorOrangTua": {
+          "type": "string",
+          "maxLength": 50,
+          "description": "Nomor WA / telepon orang tua"
+        },
+        "alamat": {
+          "type": "string",
+          "maxLength": 250,
+          "description": "Alamat rumah lokasi les"
+        },
+        "mataPelajaran": {
+          "type": "string",
+          "maxLength": 150,
+          "description": "Mata pelajaran yang diambil"
+        },
+        "hariLes": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Jadwal hari les"
+        },
+        "jamLes": {
+          "type": "string",
+          "maxLength": 50,
+          "description": "Waktu/jam les"
+        },
+        "namaPengajar": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Nama pengajar / tentor penanggung jawab"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Aktif", "Cuti", "Alumni"],
+          "description": "Status keaktifan siswa"
+        },
+        "catatanKhusus": {
+          "type": "string",
+          "maxLength": 1000,
+          "description": "Catatan khusus minat & gaya belajar siswa"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Waktu pendaftaran siswa"
+        }
+      },
+      "required": ["namaSiswa", "jenjang", "status", "createdAt"]
     }
   },
   "firestore": {
@@ -92,6 +173,12 @@
         "$ref": "#/entities/Report"
       },
       "description": "Koleksi seluruh laporan pembelajaran yang dapat diakses oleh Admin dan Pengajar"
+    },
+    "/students/{studentId}": {
+      "schema": {
+        "$ref": "#/entities/Student"
+      },
+      "description": "Koleksi data siswa terdaftar les privat"
     }
   }
 }
