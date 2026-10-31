@@ -135,6 +135,8 @@ export const ReportCard: React.FC<ReportCardProps> = ({ report }) => {
               <img
                 src="/assets/aistudio/Logo_Pendidikan_Dessa_Mentari_6f1f1e2d.png"
                 alt="Logo Dessa Mentari Education"
+                crossOrigin="anonymous"
+                loading="eager"
                 className="w-full h-full object-contain"
                 onError={(e) => {
                   (e.target as HTMLElement).style.display = 'none';
@@ -387,6 +389,8 @@ export const ReportCard: React.FC<ReportCardProps> = ({ report }) => {
                       <img
                         src="/assets/aistudio/Logo_Pendidikan_Dessa_Mentari_6f1f1e2d.png"
                         alt="Logo"
+                        crossOrigin="anonymous"
+                        loading="eager"
                         className="w-4 h-4 object-contain shrink-0"
                       />
                       <span className="font-extrabold text-[9px] text-amber-200 truncate font-serif-brand">
@@ -403,6 +407,8 @@ export const ReportCard: React.FC<ReportCardProps> = ({ report }) => {
                     <img
                       src={photo.url}
                       alt={photo.caption || `Foto Dokumentasi ${idx + 1}`}
+                      crossOrigin="anonymous"
+                      loading="eager"
                       className="w-full h-full object-cover"
                     />
                   </div>
@@ -430,6 +436,8 @@ export const ReportCard: React.FC<ReportCardProps> = ({ report }) => {
               <img
                 src="/assets/aistudio/Logo_Pendidikan_Dessa_Mentari_6f1f1e2d.png"
                 alt="Logo"
+                crossOrigin="anonymous"
+                loading="eager"
                 className="w-5 h-5 object-contain"
               />
               <span>Dessa Mentari Education</span>

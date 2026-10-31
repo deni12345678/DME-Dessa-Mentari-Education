@@ -15,7 +15,8 @@ import {
   Sparkles,
   Target,
   User,
-  PieChart
+  PieChart,
+  Download
 } from 'lucide-react';
 import { copyWhatsAppTextToClipboard } from '../utils/exportImage';
 import {
@@ -51,12 +52,14 @@ interface HistoryViewProps {
   reports: ReportData[];
   onSelectReport: (report: ReportData) => void;
   onDeleteReport: (id: string) => void;
+  onDownloadReport?: (report: ReportData) => void;
 }
 
 export const HistoryView: React.FC<HistoryViewProps> = ({
   reports,
   onSelectReport,
   onDeleteReport,
+  onDownloadReport,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStudentFilter, setSelectedStudentFilter] = useState<string>('all');
@@ -491,6 +494,17 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                         </>
                       )}
                     </button>
+
+                    {onDownloadReport && (
+                      <button
+                        onClick={() => onDownloadReport(item)}
+                        title="Unduh laporan ini sebagai gambar JPG"
+                        className="px-2.5 py-1 text-[11px] font-semibold bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-lg transition-all flex items-center gap-1 shadow-2xs"
+                      >
+                        <Download className="w-3 h-3 text-white" />
+                        <span>Unduh JPG</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

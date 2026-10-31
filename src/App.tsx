@@ -453,13 +453,35 @@ export default function App() {
     setReport((prev) => ({ ...prev, ...updated }));
   };
 
-  const handleDownloadImage = async (format: 'jpg' | 'png' = 'jpg') => {
+  const handleDownloadImage = async (format: 'jpg' | 'png' = 'jpg', targetReport?: ReportData) => {
     setDownloading(true);
-    const filename = `Laporan_Les_${report.namaSiswa.replace(/\s+/g, '_')}_${report.tanggal}`;
-    const ok = await downloadReportAsImage('report-card-container', filename, format);
-    setDownloading(false);
-    if (!ok) {
+    try {
+      const activeReport = targetReport || report;
+
+      // If user is currently on another tab, switch to 'create' tab so the card is rendered in the DOM
+      if (activeTab !== 'create') {
+        setActiveTab('create');
+        await new Promise((r) => setTimeout(r, 300));
+      }
+
+      const cleanStudent = (activeReport.namaSiswa || 'Siswa').trim().replace(/[^a-zA-Z0-9_-]/g, '_');
+      const cleanDate = (activeReport.tanggal || 'Laporan').trim().replace(/[^a-zA-Z0-9_-]/g, '_');
+      const filename = `Laporan_Les_${cleanStudent}_${cleanDate}`;
+
+      const ok = await downloadReportAsImage('report-card-container', filename, format);
+      if (!ok) {
+        // Fallback retry after small pause to ensure DOM & assets are settled
+        await new Promise((r) => setTimeout(r, 350));
+        const retryOk = await downloadReportAsImage('report-card-container', filename, format);
+        if (!retryOk) {
+          alert('Gagal mengunduh gambar laporan. Pastikan koneksi stabil atau gunakan tombol "Cetak / Print Versi PDF".');
+        }
+      }
+    } catch (err) {
+      console.error('Download handler error:', err);
       alert('Gagal mengunduh gambar laporan. Silakan coba lagi.');
+    } finally {
+      setDownloading(false);
     }
   };
 
@@ -730,6 +752,13 @@ export default function App() {
             reports={savedReports}
             onSelectReport={handleSelectFromHistory}
             onDeleteReport={handleDeleteHistoryReport}
+            onDownloadReport={(item) => {
+              setReport(item);
+              setActiveTab('create');
+              setTimeout(() => {
+                handleDownloadImage('jpg', item);
+              }, 300);
+            }}
           />
         )}
 

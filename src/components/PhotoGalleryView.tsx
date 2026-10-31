@@ -176,19 +176,43 @@ export const PhotoGalleryView: React.FC<PhotoGalleryViewProps> = ({
     setDownloadingTemplate(true);
     try {
       const canvas = await html2canvas(element, {
-        scale: 3,
+        scale: 2,
         useCORS: true,
-        allowTaint: true,
+        allowTaint: false,
         backgroundColor: '#0f172a',
         logging: false,
       });
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
-      const link = document.createElement('a');
-      link.download = `Template_Foto_DME_${(photo.namaSiswa || 'Siswa').replace(/\s+/g, '_')}_${photo.tanggal || 'Les'}.jpg`;
-      link.href = dataUrl;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+
+      const cleanStudent = (photo.namaSiswa || 'Siswa').trim().replace(/[^a-zA-Z0-9_-]/g, '_');
+      const cleanDate = (photo.tanggal || 'Les').trim().replace(/[^a-zA-Z0-9_-]/g, '_');
+      const finalFilename = `Template_Foto_DME_${cleanStudent}_${cleanDate}.jpg`;
+
+      const blob = await new Promise<Blob | null>((resolve) => {
+        canvas.toBlob(resolve, 'image/jpeg', 0.95);
+      });
+
+      if (blob) {
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.download = finalFilename;
+        link.href = blobUrl;
+        document.body.appendChild(link);
+        link.click();
+        setTimeout(() => {
+          if (link.parentNode) document.body.removeChild(link);
+          URL.revokeObjectURL(blobUrl);
+        }, 1500);
+      } else {
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+        const link = document.createElement('a');
+        link.download = finalFilename;
+        link.href = dataUrl;
+        document.body.appendChild(link);
+        link.click();
+        setTimeout(() => {
+          if (link.parentNode) document.body.removeChild(link);
+        }, 1500);
+      }
     } catch (err) {
       console.error('Error generating branded photo card:', err);
       alert('Gagal mengunduh kartu template foto.');
