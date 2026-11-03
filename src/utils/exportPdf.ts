@@ -62,22 +62,13 @@ async function inlineImageToDataUrl(img: HTMLImageElement): Promise<void> {
 }
 
 /**
- * Prepares and sanitizes cloned element before canvas capture, ensuring html2canvas renders flawlessly without distortion.
+ * Prepares and sanitizes cloned element before canvas capture.
  */
 async function sanitizeClonedElement(clonedEl: HTMLElement) {
   clonedEl.style.transform = 'none';
-  clonedEl.style.width = '760px';
-  clonedEl.style.maxWidth = '760px';
   clonedEl.style.boxSizing = 'border-box';
   clonedEl.style.margin = '0 auto';
   clonedEl.style.backgroundColor = '#ffffff';
-
-  // Neutralize complex gradient backgrounds that html2canvas misrenders on mobile
-  const gradientElements = Array.from(clonedEl.querySelectorAll('[class*="bg-gradient"]'));
-  for (const el of gradientElements) {
-    (el as HTMLElement).style.backgroundImage = 'none';
-    (el as HTMLElement).style.backgroundColor = '#0f172a';
-  }
 
   // Sanitize all images inside the clone
   const clonedImgs = Array.from(clonedEl.querySelectorAll('img'));
@@ -134,8 +125,14 @@ export async function captureElementToCanvas(
       imageTimeout: 7000,
       scrollX: 0,
       scrollY: 0,
-      windowWidth: 800,
+      windowWidth: element.offsetWidth || 760,
       onclone: async (clonedDoc) => {
+        // Strip all stylesheets to completely prevent oklch/oklab color parsing crashes in html2canvas
+        const stylesheets = Array.from(clonedDoc.querySelectorAll('link[rel="stylesheet"], style'));
+        for (const sheet of stylesheets) {
+          sheet.remove();
+        }
+
         const clonedEl = clonedDoc.getElementById(elementId);
         if (clonedEl) {
           await sanitizeClonedElement(clonedEl);
@@ -161,8 +158,13 @@ export async function captureElementToCanvas(
       imageTimeout: 5000,
       scrollX: 0,
       scrollY: 0,
-      windowWidth: 800,
+      windowWidth: element.offsetWidth || 760,
       onclone: async (clonedDoc) => {
+        const stylesheets = Array.from(clonedDoc.querySelectorAll('link[rel="stylesheet"], style'));
+        for (const sheet of stylesheets) {
+          sheet.remove();
+        }
+
         const clonedEl = clonedDoc.getElementById(elementId);
         if (clonedEl) {
           await sanitizeClonedElement(clonedEl);

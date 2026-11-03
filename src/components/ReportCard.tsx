@@ -561,15 +561,17 @@ export const ReportCard: React.FC<ReportCardProps> = ({ report }) => {
       </div>
 
       {/* SECURITY FOOTER BAR */}
-      <div className={`${t.footerBg} px-5 py-2.5 flex flex-wrap items-center justify-between text-[10px] border-t border-amber-500/20`}>
+      <div className={`${t.footerBg} px-5 py-2 flex flex-wrap items-center justify-between text-[9.5px] border-t border-amber-500/20`}>
         <div className="flex items-center gap-1.5">
-          <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+          <ShieldCheck className="w-3.5 h-3.5 text-amber-400 shrink-0" />
           <span className="font-medium">
             Dokumen Evaluasi Sah Diterbitkan oleh Dessa Mentari Education
           </span>
         </div>
-        <div className="text-white/60 font-mono text-[9px]">
-          VERIFIED ARCHIVE · {serialNo}
+        <div className="text-amber-200/80 font-mono text-[9px] flex items-center gap-2">
+          <span>© 2026 Dessa Mentari Education</span>
+          <span>·</span>
+          <span>{serialNo}</span>
         </div>
       </div>
     </div>

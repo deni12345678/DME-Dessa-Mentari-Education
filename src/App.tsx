@@ -21,6 +21,7 @@ import {
   copyWhatsAppTextToClipboard, 
   openWhatsAppDirect 
 } from './utils/exportImage';
+import { exportReportToExcel } from './utils/exportExcel';
 import {
   testConnection,
   saveReportToCloud,
@@ -50,6 +51,7 @@ import {
   X,
   ExternalLink,
   FileText,
+  FileSpreadsheet,
   Loader2,
   Sparkles,
   CheckCircle2,
@@ -585,6 +587,26 @@ export default function App() {
     }
   };
 
+  const handleDownloadExcel = (targetReport?: ReportData) => {
+    const activeReport = targetReport || report;
+    const result = exportReportToExcel(activeReport);
+    if (result.success) {
+      setDownloadNotice({
+        type: 'success',
+        title: 'Berhasil Mengunduh Excel (.xlsx)!',
+        message: `Berkas spreadsheet ${result.filename} berhasil disimpan ke folder Download perangkat Anda.`,
+        filename: result.filename,
+      });
+    } else {
+      setDownloadNotice({
+        type: 'error',
+        title: 'Gagal Mengunduh Excel',
+        message: result.error || 'Terjadi kendala saat menyusun berkas Excel.',
+        filename: result.filename,
+      });
+    }
+  };
+
   const handleCopyTextWA = async () => {
     const ok = await copyWhatsAppTextToClipboard(report);
     if (ok) {
@@ -804,23 +826,31 @@ export default function App() {
                   </div>
 
                   {/* Primary Export Action Grid */}
-                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
                     <button
                       onClick={() => handleDownloadPdf()}
                       disabled={downloadingPdf || downloading}
-                      className="px-3 py-2.5 bg-gradient-to-r from-rose-700 to-red-600 hover:from-rose-800 hover:to-red-700 text-white rounded-xl text-xs font-bold shadow-xs transition-all flex flex-col items-center justify-center gap-1 disabled:opacity-50 relative group"
+                      className="px-2.5 py-2.5 bg-gradient-to-r from-rose-700 to-red-600 hover:from-rose-800 hover:to-red-700 text-white rounded-xl text-xs font-bold shadow-xs transition-all flex flex-col items-center justify-center gap-1 disabled:opacity-50 relative group"
                     >
                       <span className="absolute -top-1.5 right-1 px-1.5 py-0.2 bg-amber-300 text-amber-950 font-black text-[8px] rounded-full uppercase tracking-wider shadow-2xs">
-                        Rekomendasi
+                        1 Lembar
                       </span>
                       <FileText className="w-4 h-4 text-rose-200" />
-                      <span>{downloadingPdf ? 'Membuat...' : 'Unduh PDF'}</span>
+                      <span>{downloadingPdf ? 'Membuat...' : 'PDF Resmi'}</span>
+                    </button>
+
+                    <button
+                      onClick={() => handleDownloadExcel()}
+                      className="px-2.5 py-2.5 bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-800 hover:to-teal-800 text-white rounded-xl text-xs font-bold shadow-xs transition-all flex flex-col items-center justify-center gap-1"
+                    >
+                      <FileSpreadsheet className="w-4 h-4 text-emerald-200" />
+                      <span>Unduh Excel</span>
                     </button>
 
                     <button
                       onClick={() => handleDownloadImage('jpg')}
                       disabled={downloading || downloadingPdf}
-                      className="px-3 py-2.5 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white rounded-xl text-xs font-bold shadow-xs transition-all flex flex-col items-center justify-center gap-1 disabled:opacity-50"
+                      className="px-2.5 py-2.5 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white rounded-xl text-xs font-bold shadow-xs transition-all flex flex-col items-center justify-center gap-1 disabled:opacity-50"
                     >
                       <Download className="w-4 h-4 text-amber-200" />
                       <span>{downloading ? 'Mengunduh...' : 'Unduh JPG'}</span>
@@ -829,7 +859,7 @@ export default function App() {
                     <button
                       onClick={() => handleDownloadImage('png')}
                       disabled={downloading || downloadingPdf}
-                      className="px-3 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-xs transition-all flex flex-col items-center justify-center gap-1 disabled:opacity-50"
+                      className="px-2.5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-xs transition-all flex flex-col items-center justify-center gap-1 disabled:opacity-50"
                     >
                       <FileImage className="w-4 h-4 text-slate-300" />
                       <span>Unduh PNG</span>
@@ -837,7 +867,7 @@ export default function App() {
 
                     <button
                       onClick={handleCopyTextWA}
-                      className="px-3 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs transition-all flex flex-col items-center justify-center gap-1"
+                      className="px-2.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs transition-all flex flex-col items-center justify-center gap-1"
                     >
                       {copiedSuccess ? (
                         <>
@@ -854,7 +884,7 @@ export default function App() {
 
                     <button
                       onClick={handleOpenWA}
-                      className="px-3 py-2.5 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-bold shadow-xs transition-all flex flex-col items-center justify-center gap-1"
+                      className="px-2.5 py-2.5 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-bold shadow-xs transition-all flex flex-col items-center justify-center gap-1"
                     >
                       <Send className="w-4 h-4 text-teal-200" />
                       <span>Kirim WA</span>
@@ -913,6 +943,9 @@ export default function App() {
               setTimeout(() => {
                 handleDownloadPdf(item);
               }, 300);
+            }}
+            onDownloadExcel={(item) => {
+              handleDownloadExcel(item);
             }}
           />
         )}
@@ -1187,10 +1220,10 @@ export default function App() {
       {/* FOOTER */}
       <footer className="bg-white border-t border-slate-200 py-4 mt-auto no-print">
         <div className="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500">
-          <p className="font-semibold text-slate-700">
-            Dessa Mentari Education © {new Date().getFullYear()} — Generator Laporan Pembelajaran & AI Video Studio
+          <p className="font-bold text-slate-800 font-serif-brand">
+            © 2026 Dessa Mentari Education — Tempat Belajar Terpercaya · Les Privat Keluarga Indonesia
           </p>
-          <p className="text-[11px] text-slate-400 mt-0.5">
+          <p className="text-[11px] text-slate-500 mt-0.5">
             Pengajar Resmi: Deni Santoso, M.M & Sarah Syahidah Syahrudin, S.Pd
           </p>
         </div>

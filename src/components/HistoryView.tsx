@@ -55,6 +55,7 @@ interface HistoryViewProps {
   onDeleteReport: (id: string) => void;
   onDownloadReport?: (report: ReportData) => void;
   onDownloadPdf?: (report: ReportData) => void;
+  onDownloadExcel?: (report: ReportData) => void;
 }
 
 export const HistoryView: React.FC<HistoryViewProps> = ({
@@ -63,6 +64,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
   onDeleteReport,
   onDownloadReport,
   onDownloadPdf,
+  onDownloadExcel,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStudentFilter, setSelectedStudentFilter] = useState<string>('all');
@@ -501,11 +503,22 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                     {onDownloadPdf && (
                       <button
                         onClick={() => onDownloadPdf(item)}
-                        title="Unduh laporan ini sebagai berkas PDF resmi"
+                        title="Unduh laporan ini sebagai berkas PDF resmi (1 Lembar Pas)"
                         className="px-2.5 py-1 text-[11px] font-semibold bg-rose-700 hover:bg-rose-800 text-white rounded-lg transition-all flex items-center gap-1 shadow-2xs"
                       >
                         <FileText className="w-3 h-3 text-white" />
                         <span>Unduh PDF</span>
+                      </button>
+                    )}
+
+                    {onDownloadExcel && (
+                      <button
+                        onClick={() => onDownloadExcel(item)}
+                        title="Unduh laporan ini sebagai berkas Excel (.xlsx)"
+                        className="px-2.5 py-1 text-[11px] font-semibold bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg transition-all flex items-center gap-1 shadow-2xs"
+                      >
+                        <FileSpreadsheet className="w-3 h-3 text-white" />
+                        <span>Excel</span>
                       </button>
                     )}
 
@@ -516,7 +529,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                         className="px-2.5 py-1 text-[11px] font-semibold bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-lg transition-all flex items-center gap-1 shadow-2xs"
                       >
                         <Download className="w-3 h-3 text-white" />
-                        <span>Unduh JPG</span>
+                        <span>JPG</span>
                       </button>
                     )}
                   </div>
