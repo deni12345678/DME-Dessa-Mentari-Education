@@ -51,6 +51,14 @@ service cloud.firestore {
       data.createdAt is string;
     }
 
+    function isValidCertificate(data) {
+      return data.keys().hasAll(['namaSiswa', 'mataPelajaran', 'certificateNumber', 'createdAt']) &&
+      data.namaSiswa is string && data.namaSiswa.size() > 0 &&
+      data.mataPelajaran is string &&
+      data.certificateNumber is string &&
+      data.createdAt is string;
+    }
+
     match /reports/{reportId} {
       allow read: if true;
       allow create, update: if isValidReport(request.resource.data);
@@ -72,6 +80,12 @@ service cloud.firestore {
     match /billings/{billingId} {
       allow read: if true;
       allow create, update: if isValidBilling(request.resource.data);
+      allow delete: if true;
+    }
+
+    match /certificates/{certificateId} {
+      allow read: if true;
+      allow create, update: if isValidCertificate(request.resource.data);
       allow delete: if true;
     }
   }

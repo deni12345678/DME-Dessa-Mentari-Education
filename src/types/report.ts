@@ -21,6 +21,8 @@ export type AttendanceStatus = 'Hadir' | 'Reschedule / Disingkat' | 'Izin / Saki
 
 export type CardTheme = 'solar' | 'emerald' | 'navy' | 'pastel' | 'dark';
 
+export type CardLayout = 'elegant' | 'bold' | 'minimalist';
+
 export interface PhotoItem {
   id: string;
   url: string; // Base64 data URL or web image URL
@@ -54,6 +56,7 @@ export interface ReportData {
   catatanOrangTua?: string;
   fotoDokumentasi?: PhotoItem[];
   theme: CardTheme;
+  cardLayout?: CardLayout;
   createdAt: string;
 }
 
@@ -82,6 +85,7 @@ export interface TeacherSettings {
   namaPengajar: string;
   nomorWA?: string;
   defaultTheme: CardTheme;
+  defaultLayout?: CardLayout;
   lembagaName: string;
   lembagaTagline: string;
   contactInfo: string;
@@ -134,6 +138,39 @@ export interface BillingRecord {
   
   isManualEntry?: boolean; // true if created manually without auto-aggregation
   daftarSesiManual?: ManualSessionItem[]; // optional list of manual session meetings
+  createdAt: string;
+}
+
+export type CertificateType = 
+  | 'Kelulusan Kursus' 
+  | 'Pencapaian Prestasi' 
+  | 'Ketuntasan Modul' 
+  | 'Apresiasi & Motivasi';
+
+export type CertificateTheme = 'gold' | 'navy' | 'emerald';
+
+export interface CertificateData {
+  id: string;
+  certificateNumber: string;
+  studentId?: string;
+  namaSiswa: string;
+  jenjang: EducationLevel;
+  kelasGrade?: string;
+  sekolah?: string;
+  mataPelajaran: SubjectOption | string;
+  tipeSertifikat: CertificateType;
+  predikat: string;
+  nilaiAkhir?: number | string;
+  deskripsiKompetensi: string;
+  tanggalTerbit: string;
+  kotaTerbit: string;
+  namaKepalaLembaga: string;
+  jabatanKepala: string;
+  namaTutorPengampu: string;
+  jabatanTutor: string;
+  theme: CertificateTheme;
+  nomorWAOrangTua?: string;
+  isVerified?: boolean;
   createdAt: string;
 }
 

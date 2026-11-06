@@ -136,6 +136,36 @@ export const ReportForm: React.FC<ReportFormProps> = ({
         </div>
       </div>
 
+      {/* QUICK LAYOUT TOGGLE (ELEGANT, BOLD, MINIMALIST) */}
+      <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 bg-slate-100/80 rounded-xl border border-slate-200">
+        <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1">
+          <span>📐</span> Format Layout Kartu:
+        </span>
+        <div className="flex items-center gap-1.5">
+          {[
+            { id: 'elegant', label: '🏛️ Elegant (Resmi)' },
+            { id: 'bold', label: '⚡ Bold (Modern)' },
+            { id: 'minimalist', label: '🌿 Minimalist (Clean)' },
+          ].map((lay) => {
+            const isCur = (report.cardLayout || 'elegant') === lay.id;
+            return (
+              <button
+                key={lay.id}
+                type="button"
+                onClick={() => onChange({ cardLayout: lay.id as any })}
+                className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all ${
+                  isCur
+                    ? 'bg-amber-600 text-white shadow-2xs'
+                    : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
+                }`}
+              >
+                {lay.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* 1. IDENTITAS SISWA & PENGASUH */}
       <div className="space-y-4">
         <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">

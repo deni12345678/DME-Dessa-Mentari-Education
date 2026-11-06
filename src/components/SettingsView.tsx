@@ -91,13 +91,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </p>
         </div>
 
-        {/* Tema Kartu Laporan Default */}
+        {/* Tema Warna Kartu Default */}
         <div>
           <label className="block text-xs font-bold text-slate-700 mb-2 flex items-center gap-1.5">
             <Palette className="w-4 h-4 text-purple-600" />
             Tema Warna Kartu Default
           </label>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
             {[
               { id: 'solar', name: 'Mentari Amber', desc: 'Warna hangat Oranye & Emas' },
               { id: 'emerald', name: 'Emerald Teal', desc: 'Hijau Segar & Mint' },
@@ -122,8 +122,81 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </div>
         </div>
 
+        {/* Variasi Layout Kartu Laporan (Elegant, Bold, Minimalist) */}
+        <div className="border-t border-slate-100 pt-4">
+          <label className="block text-xs font-bold text-slate-700 mb-2 flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <span className="text-base">📐</span>
+              <span>Variasi Format & Layout Kartu Laporan</span>
+            </div>
+            <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
+              Pilihan Dinamis
+            </span>
+          </label>
+          <p className="text-[11px] text-slate-500 mb-3">
+            Pilih struktur visual laporan pembelajaran yang paling sesuai dengan kebutuhan lembaga dan karakter siswa.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {[
+              {
+                id: 'elegant',
+                name: 'Elegant (Resmi)',
+                badge: 'Standar Lembaga',
+                desc: 'Kop formal mewah dengan segel ganda, kartu dossier akademik, dan stempel melingkar resmi DME.',
+                accent: 'from-amber-700 to-amber-900',
+              },
+              {
+                id: 'bold',
+                name: 'Bold (Modern)',
+                badge: 'Kontras Tinggi',
+                desc: 'Desain modern berani dengan kotak skor metrik besar, border tegas, dan visibilitas tinggi di layar HP.',
+                accent: 'from-slate-900 to-amber-600',
+              },
+              {
+                id: 'minimalist',
+                name: 'Minimalist (Clean)',
+                badge: 'Japandi Simpel',
+                desc: 'Gaya bersih modern, garis tipis presisi, tipografi lapang, serta tampilan ringan dan rapi.',
+                accent: 'from-slate-700 to-slate-900',
+              },
+            ].map((lay) => {
+              const isSelected = (form.defaultLayout || 'elegant') === lay.id;
+              return (
+                <button
+                  key={lay.id}
+                  type="button"
+                  onClick={() => setForm({ ...form, defaultLayout: lay.id as any })}
+                  className={`p-3.5 rounded-xl border text-left transition-all relative overflow-hidden flex flex-col justify-between ${
+                    isSelected
+                      ? 'border-amber-500 bg-amber-50/70 ring-2 ring-amber-400 shadow-sm'
+                      : 'border-slate-200 hover:border-slate-300 bg-white'
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className={`text-[9.5px] font-black uppercase px-1.5 py-0.5 rounded text-white bg-gradient-to-r ${lay.accent}`}>
+                        {lay.badge}
+                      </span>
+                      {isSelected && (
+                        <span className="text-amber-600 font-bold text-xs">✓ Terpilih</span>
+                      )}
+                    </div>
+                    <div className="text-xs font-bold text-slate-900">{lay.name}</div>
+                    <div className="text-[11px] text-slate-600 mt-1 leading-relaxed">{lay.desc}</div>
+                  </div>
+                  <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400">
+                    <span>Ukuran A4 1 Halaman</span>
+                    <span>PDF & JPG Ready</span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Action Button */}
-        <div className="pt-4 flex items-center justify-between">
+        <div className="pt-4 flex items-center justify-between border-t border-slate-100">
           {savedSuccess ? (
             <span className="text-xs text-emerald-600 font-bold flex items-center gap-1.5">
               <CheckCircle className="w-4 h-4 text-emerald-600" />

@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { ReportData, TeacherSettings, StudentData, PhotoItem, BillingRecord } from './types/report';
+import { ReportData, TeacherSettings, StudentData, PhotoItem, BillingRecord, CertificateData } from './types/report';
 import { Header, ActiveTabType } from './components/Header';
+import { PublicNavbar, PublicTabType } from './components/PublicNavbar';
+import { PublicHomeView } from './components/PublicHomeView';
+import { PublicAboutView } from './components/PublicAboutView';
+import { PublicStudentReportLookup } from './components/PublicStudentReportLookup';
+import { AdminHeader, AdminTabType } from './components/AdminHeader';
 import { ReportForm } from './components/ReportForm';
 import { ReportCard } from './components/ReportCard';
 import { AiAssistantModal } from './components/AiAssistantModal';
@@ -12,7 +17,9 @@ import { StatsSummaryPanel } from './components/StatsSummaryPanel';
 import { StudentManagementView } from './components/StudentManagementView';
 import { PhotoGalleryView } from './components/PhotoGalleryView';
 import { BillingSummaryView } from './components/BillingSummaryView';
+import { CertificateManagerView } from './components/CertificateManagerView';
 import { PWAInstallModal } from './components/PWAInstallModal';
+import { InstitutionView } from './components/InstitutionView';
 import { 
   downloadReportAsImage, 
   downloadReportAsPdf,
@@ -35,12 +42,16 @@ import {
   subscribePhotosFromCloud,
   saveBillingToCloud,
   deleteBillingFromCloud,
-  subscribeBillingsFromCloud
+  subscribeBillingsFromCloud,
+  saveCertificateToCloud,
+  deleteCertificateFromCloud,
+  subscribeCertificatesFromCloud
 } from './lib/firebase';
 import { 
   Download, 
   Share2, 
   Check, 
+  Award,
   Printer, 
   Save, 
   RotateCcw,
@@ -62,6 +73,7 @@ const DEFAULT_SETTINGS: TeacherSettings = {
   namaPengajar: 'Deni Santoso, M.M',
   nomorWA: '',
   defaultTheme: 'solar',
+  defaultLayout: 'elegant',
   lembagaName: 'Dessa Mentari Education',
   lembagaTagline: 'Bright Learning & Private Tutoring System',
   contactInfo: 'Dessa Mentari Education',
@@ -219,8 +231,93 @@ const SEED_STUDENTS: StudentData[] = [
   },
 ];
 
+const SEED_CERTIFICATES: CertificateData[] = [
+  {
+    id: 'CERT-001',
+    certificateNumber: 'DME/CERT/2026/X/0028',
+    studentId: 'STU-001',
+    namaSiswa: 'Syifa Azzarqaa',
+    jenjang: 'SD',
+    kelasGrade: 'Kelas 4 SD',
+    sekolah: 'SD Islam Terpadu Al-Fath',
+    mataPelajaran: 'Matematika',
+    tipeSertifikat: 'Kelulusan Kursus',
+    predikat: 'Lulus dengan Pujian (Honors)',
+    nilaiAkhir: 94,
+    deskripsiKompetensi: 'Diberikan kepada Ananda Syifa Azzarqaa atas dedikasi dan penguasaan komprehensif pada bidang studi Matematika jenjang SD. Telah tuntas menguasai konsep operasi hitung pecahan, bilangan desimal, keliling dan luas bangun datar, serta kecakapan bernalar logis memecahkan soal cerita kontekstual secara mandiri.',
+    tanggalTerbit: '2026-10-28',
+    kotaTerbit: 'Indonesia',
+    namaKepalaLembaga: 'Deni Santoso, M.M',
+    jabatanKepala: 'Direktur Lembaga',
+    namaTutorPengampu: 'Sarah Syahidah Syahrudin, S.Pd',
+    jabatanTutor: 'Instruktur Pengampu',
+    theme: 'gold',
+    nomorWAOrangTua: '081234567890',
+    isVerified: true,
+    createdAt: '2026-10-28T09:00:00.000Z',
+  },
+  {
+    id: 'CERT-002',
+    certificateNumber: 'DME/CERT/2026/X/0034',
+    studentId: 'STU-004',
+    namaSiswa: 'Clarissa Puteri',
+    jenjang: 'TK',
+    kelasGrade: 'TK B',
+    sekolah: 'TK Pembina',
+    mataPelajaran: 'Calistung / Cisritung',
+    tipeSertifikat: 'Kelulusan Kursus',
+    predikat: 'Sangat Memuaskan (A)',
+    nilaiAkhir: 96,
+    deskripsiKompetensi: 'Diberikan kepada Ananda Clarissa Puteri atas keberhasilannya menyelesaikan seluruh modul Program Calistung & Motorik Ceria dengan predikat istimewa. Ananda telah menunjukkan kemandirian luar biasa dalam membaca lancar suku kata dan kalimat sederhana, kerapian menulis huruf abjad serta angka, dan kecakapan berhitung dasar penjumlahan serta pengurangan 1-100 secara antusias.',
+    tanggalTerbit: '2026-10-30',
+    kotaTerbit: 'Indonesia',
+    namaKepalaLembaga: 'Deni Santoso, M.M',
+    jabatanKepala: 'Direktur Lembaga',
+    namaTutorPengampu: 'Sarah Syahidah Syahrudin, S.Pd',
+    jabatanTutor: 'Instruktur Pengampu',
+    theme: 'emerald',
+    nomorWAOrangTua: '087766554433',
+    isVerified: true,
+    createdAt: '2026-10-30T10:00:00.000Z',
+  }
+];
+
 export default function App() {
-  const [activeTab, setActiveTab] = useState<ActiveTabType>('create');
+  const [viewMode, setViewMode] = useState<'public' | 'admin'>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('mode') === 'admin' || params.get('reportId')) return 'admin';
+      const stored = localStorage.getItem('dme_view_mode');
+      if (stored === 'admin') return 'admin';
+    }
+    return 'public';
+  });
+
+  const [publicTab, setPublicTab] = useState<PublicTabType>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get('tab');
+      if (tabParam && ['home', 'about', 'packages', 'calculator', 'student-report', 'register', 'faq'].includes(tabParam)) {
+        return tabParam as PublicTabType;
+      }
+      const stored = localStorage.getItem('dme_public_tab');
+      if (stored && ['home', 'about', 'packages', 'calculator', 'student-report', 'register', 'faq'].includes(stored)) {
+        return stored as PublicTabType;
+      }
+    }
+    return 'home';
+  });
+
+  const [adminTab, setAdminTab] = useState<AdminTabType>(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('dme_admin_tab');
+      if (stored && ['create', 'students', 'certificates', 'billing', 'photos', 'video', 'history', 'settings', 'guide'].includes(stored)) {
+        return stored as AdminTabType;
+      }
+    }
+    return 'create';
+  });
+
   const [settings, setSettings] = useState<TeacherSettings>(() => {
     const saved = localStorage.getItem('dme_teacher_settings');
     return saved ? JSON.parse(saved) : DEFAULT_SETTINGS;
@@ -252,6 +349,7 @@ export default function App() {
     tugasRumah: 'Mengerjakan 5 soal pecahan desimal di buku halaman 42.',
     catatanOrangTua: 'Mohon Ananda dibantu mengulang latihan hafalan perkalian 7 dan 8 di rumah ya Bund.',
     theme: settings.defaultTheme || 'solar',
+    cardLayout: settings.defaultLayout || 'elegant',
     createdAt: new Date().toISOString(),
   }));
 
@@ -274,6 +372,13 @@ export default function App() {
     const saved = localStorage.getItem('dme_billing_records');
     return saved ? JSON.parse(saved) : [];
   });
+
+  const [savedCertificates, setSavedCertificates] = useState<CertificateData[]>(() => {
+    const saved = localStorage.getItem('dme_saved_certificates');
+    return saved ? JSON.parse(saved) : SEED_CERTIFICATES;
+  });
+
+  const [selectedStudentForCert, setSelectedStudentForCert] = useState<StudentData | null>(null);
 
   const [downloading, setDownloading] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
@@ -313,7 +418,7 @@ export default function App() {
     setTimeout(() => setAdminLinkCopied(false), 2500);
   };
 
-  // Initialize Firebase Cloud test and subscribe to real-time reports, students, photos & billings
+  // Initialize Firebase Cloud test and subscribe to real-time reports, students, photos, billings & certificates
   useEffect(() => {
     testConnection();
 
@@ -373,11 +478,27 @@ export default function App() {
       }
     );
 
+    const unsubscribeCertificates = subscribeCertificatesFromCloud(
+      (cloudCerts) => {
+        if (cloudCerts.length > 0) {
+          setSavedCertificates(cloudCerts);
+        } else {
+          SEED_CERTIFICATES.forEach((seed) => {
+            saveCertificateToCloud(seed).catch(console.error);
+          });
+        }
+      },
+      (err) => {
+        console.warn('Firebase certificates sync listener warning:', err);
+      }
+    );
+
     return () => {
       unsubscribeReports();
       unsubscribeStudents();
       unsubscribePhotos();
       unsubscribeBillings();
+      unsubscribeCertificates();
     };
   }, []);
 
@@ -417,6 +538,19 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('dme_registered_students', JSON.stringify(students));
   }, [students]);
+
+  // Sync viewMode, publicTab, and adminTab to localStorage
+  useEffect(() => {
+    localStorage.setItem('dme_view_mode', viewMode);
+  }, [viewMode]);
+
+  useEffect(() => {
+    localStorage.setItem('dme_public_tab', publicTab);
+  }, [publicTab]);
+
+  useEffect(() => {
+    localStorage.setItem('dme_admin_tab', adminTab);
+  }, [adminTab]);
 
   // Sync standalone photos to localStorage
   useEffect(() => {
@@ -481,6 +615,41 @@ export default function App() {
     await deleteBillingFromCloud(id);
   };
 
+  const handleSaveCertificate = async (cert: CertificateData) => {
+    setSavedCertificates((prev) => {
+      const idx = prev.findIndex((c) => c.id === cert.id);
+      let updated: CertificateData[];
+      if (idx >= 0) {
+        updated = [...prev];
+        updated[idx] = cert;
+      } else {
+        updated = [cert, ...prev];
+      }
+      localStorage.setItem('dme_saved_certificates', JSON.stringify(updated));
+      return updated;
+    });
+
+    try {
+      await saveCertificateToCloud(cert);
+    } catch (err) {
+      console.warn('Could not save certificate to cloud, saved in localStorage:', err);
+    }
+  };
+
+  const handleDeleteCertificate = async (id: string) => {
+    setSavedCertificates((prev) => {
+      const updated = prev.filter((c) => c.id !== id);
+      localStorage.setItem('dme_saved_certificates', JSON.stringify(updated));
+      return updated;
+    });
+
+    try {
+      await deleteCertificateFromCloud(id);
+    } catch (err) {
+      console.warn('Could not delete certificate from cloud:', err);
+    }
+  };
+
   const handleSelectStudentForReport = (student: StudentData) => {
     setReport((prev) => ({
       ...prev,
@@ -490,7 +659,8 @@ export default function App() {
       namaPengajar: student.namaPengajar || prev.namaPengajar,
       mataPelajaran: student.mataPelajaran || prev.mataPelajaran,
     }));
-    setActiveTab('create');
+    setViewMode('admin');
+    setAdminTab('create');
   };
 
   const handleReportChange = (updated: Partial<ReportData>) => {
@@ -502,8 +672,9 @@ export default function App() {
     try {
       const activeReport = targetReport || report;
 
-      if (activeTab !== 'create') {
-        setActiveTab('create');
+      if (!targetReport && (viewMode !== 'admin' || adminTab !== 'create')) {
+        setViewMode('admin');
+        setAdminTab('create');
         await new Promise((r) => setTimeout(r, 350));
       }
 
@@ -552,8 +723,9 @@ export default function App() {
     try {
       const activeReport = targetReport || report;
 
-      if (activeTab !== 'create') {
-        setActiveTab('create');
+      if (!targetReport && (viewMode !== 'admin' || adminTab !== 'create')) {
+        setViewMode('admin');
+        setAdminTab('create');
         await new Promise((r) => setTimeout(r, 350));
       }
 
@@ -669,6 +841,7 @@ export default function App() {
         tugasRumah: '',
         catatanOrangTua: '',
         theme: settings.defaultTheme || 'solar',
+        cardLayout: settings.defaultLayout || 'elegant',
         createdAt: new Date().toISOString(),
       });
     }
@@ -676,7 +849,8 @@ export default function App() {
 
   const handleSelectFromHistory = (selected: ReportData) => {
     setReport(selected);
-    setActiveTab('create');
+    setViewMode('admin');
+    setAdminTab('create');
   };
 
   const handleDeleteHistoryReport = (id: string) => {
@@ -693,21 +867,40 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
-      {/* HEADER NAVBAR */}
-      <Header
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        onDownloadJpg={() => handleDownloadImage('jpg')}
-        downloading={downloading}
-        onDownloadPdf={() => handleDownloadPdf()}
-        downloadingPdf={downloadingPdf}
-        onCopyAdminLink={handleCopyAdminPortalLink}
-        adminLinkCopied={adminLinkCopied}
-        onOpenInstallModal={() => setIsInstallModalOpen(true)}
-        studentsCount={students.length}
-        photosCount={totalPhotosCount}
-        unpaidCount={unpaidBillingsCount}
-      />
+      {/* CONDITIONAL HEADER: PUBLIC WEBSITE NAVBAR OR ADMIN OPERATIONAL HEADER */}
+      {viewMode === 'public' ? (
+        <PublicNavbar
+          activeTab={publicTab}
+          onTabChange={setPublicTab}
+          onGoToAdmin={() => {
+            setViewMode('admin');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          onOpenInstallModal={() => setIsInstallModalOpen(true)}
+          contactPhone={settings.nomorWA || '6281234567890'}
+          registeredStudentsCount={students.length}
+        />
+      ) : (
+        <AdminHeader
+          adminTab={adminTab}
+          onAdminTabChange={setAdminTab}
+          onExitAdmin={() => {
+            setViewMode('public');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          onDownloadJpg={() => handleDownloadImage('jpg')}
+          downloading={downloading}
+          onDownloadPdf={() => handleDownloadPdf()}
+          downloadingPdf={downloadingPdf}
+          onCopyAdminLink={handleCopyAdminPortalLink}
+          adminLinkCopied={adminLinkCopied}
+          onOpenInstallModal={() => setIsInstallModalOpen(true)}
+          studentsCount={students.length}
+          certificatesCount={savedCertificates.length}
+          photosCount={totalPhotosCount}
+          unpaidCount={unpaidBillingsCount}
+        />
+      )}
 
       {/* PWA INSTALL BANNER */}
       {showInstallBanner && (
@@ -743,7 +936,89 @@ export default function App() {
 
       {/* MAIN CONTAINER */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        {activeTab === 'create' && (
+        {/* ======================================================== */}
+        {/* 1. PUBLIC FRONT-FACING WEBSITE (TAMPILAN DEPAN LEMBAGA)   */}
+        {/* ======================================================== */}
+        {viewMode === 'public' && (
+          <div>
+            {publicTab === 'home' && (
+              <PublicHomeView
+                settings={settings}
+                onNavigateTab={(tab) => {
+                  setPublicTab(tab as PublicTabType);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                onGoToAdmin={() => {
+                  setViewMode('admin');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+              />
+            )}
+
+            {publicTab === 'about' && (
+              <PublicAboutView
+                settings={settings}
+                onNavigateTab={(tab) => {
+                  setPublicTab(tab as PublicTabType);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+              />
+            )}
+
+            {publicTab === 'packages' && (
+              <InstitutionView
+                settings={settings}
+                initialSection="packages"
+                onRegisterStudent={handleSaveStudent}
+                onGoToReportForm={() => setViewMode('admin')}
+              />
+            )}
+
+            {publicTab === 'calculator' && (
+              <InstitutionView
+                settings={settings}
+                initialSection="calculator"
+                onRegisterStudent={handleSaveStudent}
+                onGoToReportForm={() => setViewMode('admin')}
+              />
+            )}
+
+            {publicTab === 'student-report' && (
+              <PublicStudentReportLookup
+                reports={savedReports}
+                certificates={savedCertificates}
+                students={students}
+                onDownloadPdf={handleDownloadPdf}
+                onDownloadJpg={(r) => handleDownloadImage('jpg', r)}
+                downloadingPdf={downloadingPdf}
+                downloadingJpg={downloading}
+              />
+            )}
+
+            {publicTab === 'register' && (
+              <InstitutionView
+                settings={settings}
+                initialSection="register"
+                onRegisterStudent={handleSaveStudent}
+                onGoToReportForm={() => setViewMode('admin')}
+              />
+            )}
+
+            {publicTab === 'faq' && (
+              <InstitutionView
+                settings={settings}
+                initialSection="faq"
+                onRegisterStudent={handleSaveStudent}
+                onGoToReportForm={() => setViewMode('admin')}
+              />
+            )}
+          </div>
+        )}
+
+        {/* ======================================================== */}
+        {/* 2. ADMIN PORTAL (SISTEM INPUT & OPERASIONAL GURU/PENGELOLA) */}
+        {/* ======================================================== */}
+        {viewMode === 'admin' && (
           <div className="space-y-6">
             {/* ADMIN PORTAL WELCOME BANNER */}
             <div className="bg-gradient-to-r from-amber-900 via-amber-950 to-slate-900 text-white p-4 sm:p-5 rounded-2xl shadow-md border border-amber-500/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -754,220 +1029,263 @@ export default function App() {
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="text-sm font-extrabold uppercase tracking-wider text-amber-300">
-                      Portal Input Laporan Admin — Dessa Mentari Education
+                      Fitur Admin Operasional — Dessa Mentari Education
                     </h3>
                     <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-400/30">
                       🟢 Cloud Sync Live
                     </span>
                   </div>
                   <p className="text-xs text-slate-200 mt-1">
-                    Sebagai Admin, Anda dapat mengisi laporan pembelajaran untuk pengajar (Deni Santoso, M.M / Sarah Syahidah Syahrudin, S.Pd). Seluruh data langsung tersimpan otomatis ke Cloud Database.
+                    Sistem input laporan belajar siswa, data murid privat, billing honor, galeri foto, dan arsip dokumen resmi.
                   </p>
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={handleCopyAdminPortalLink}
-                className="px-3.5 py-2 text-xs font-extrabold text-amber-950 bg-amber-300 hover:bg-amber-200 active:scale-95 rounded-xl transition-all shadow-sm flex items-center gap-1.5 shrink-0"
-              >
-                <span>{adminLinkCopied ? '✓ Link Admin Tersalin!' : '🔗 Salin Link Direct Admin'}</span>
-              </button>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setViewMode('public');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="px-3 py-2 text-xs font-bold text-white bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl transition-all"
+                >
+                  🌐 Lihat Web Depan
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCopyAdminPortalLink}
+                  className="px-3 py-2 text-xs font-extrabold text-amber-950 bg-amber-300 hover:bg-amber-200 active:scale-95 rounded-xl transition-all shadow-sm flex items-center gap-1.5 shrink-0"
+                >
+                  <span>{adminLinkCopied ? '✓ Link Tersalin!' : '🔗 Salin Link Admin'}</span>
+                </button>
+              </div>
             </div>
 
-            <StatsSummaryPanel reports={savedReports} />
+            {adminTab === 'create' && (
+              <div className="space-y-6">
+                <StatsSummaryPanel reports={savedReports} />
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-              {/* FORM INPUTS (LEFT COLUMN) */}
-              <div className="lg:col-span-6 space-y-4 no-print">
-                <ReportForm
-                  report={report}
-                  onChange={handleReportChange}
-                  onOpenAiAssistant={() => setIsAiModalOpen(true)}
-                  registeredStudents={students}
-                />
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                  {/* FORM INPUTS (LEFT COLUMN) */}
+                  <div className="lg:col-span-6 space-y-4 no-print">
+                    <ReportForm
+                      report={report}
+                      onChange={handleReportChange}
+                      onOpenAiAssistant={() => setIsAiModalOpen(true)}
+                      registeredStudents={students}
+                    />
 
-                {/* Reset & Quick Actions Bar */}
-                <div className="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
-                  <button
-                    type="button"
-                    onClick={handleResetForm}
-                    className="px-3 py-2 text-xs font-semibold text-slate-500 hover:text-red-600 transition-colors flex items-center gap-1.5"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" />
-                    <span>Reset Form</span>
-                  </button>
+                    {/* Reset & Quick Actions Bar */}
+                    <div className="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
+                      <button
+                        type="button"
+                        onClick={handleResetForm}
+                        className="px-3 py-2 text-xs font-semibold text-slate-500 hover:text-red-600 transition-colors flex items-center gap-1.5"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        <span>Reset Form</span>
+                      </button>
 
-                  <button
-                    type="button"
-                    onClick={handleSaveToHistory}
-                    className="px-4 py-2 text-xs font-bold text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all flex items-center gap-1.5 shadow-2xs"
-                  >
-                    <Save className="w-3.5 h-3.5 text-amber-600" />
-                    <span>{saveReportSuccess ? 'Tersimpan!' : 'Simpan ke Riwayat'}</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* LIVE CARD PREVIEW & EXPORT ACTIONS (RIGHT COLUMN) */}
-              <div className="lg:col-span-6 space-y-4 sticky top-20">
-                {/* Action Toolbar above Card */}
-                <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3 no-print">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-                    <div className="flex items-center gap-2">
-                      <Eye className="w-4 h-4 text-amber-600" />
-                      <span className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-                        Pratinjau Kartu Laporan
-                      </span>
+                      <button
+                        type="button"
+                        onClick={handleSaveToHistory}
+                        className="px-4 py-2 text-xs font-bold text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all flex items-center gap-1.5 shadow-2xs"
+                      >
+                        <Save className="w-3.5 h-3.5 text-amber-600" />
+                        <span>{saveReportSuccess ? 'Tersimpan!' : 'Simpan ke Riwayat'}</span>
+                      </button>
                     </div>
-                    <span className="text-[11px] text-slate-400 font-medium">
-                      Tampilan Ekspor JPG
-                    </span>
                   </div>
 
-                  {/* Primary Export Action Grid */}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
-                    <button
-                      onClick={() => handleDownloadPdf()}
-                      disabled={downloadingPdf || downloading}
-                      className="px-2.5 py-2.5 bg-gradient-to-r from-rose-700 to-red-600 hover:from-rose-800 hover:to-red-700 text-white rounded-xl text-xs font-bold shadow-xs transition-all flex flex-col items-center justify-center gap-1 disabled:opacity-50 relative group"
-                    >
-                      <span className="absolute -top-1.5 right-1 px-1.5 py-0.2 bg-amber-300 text-amber-950 font-black text-[8px] rounded-full uppercase tracking-wider shadow-2xs">
-                        1 Lembar
-                      </span>
-                      <FileText className="w-4 h-4 text-rose-200" />
-                      <span>{downloadingPdf ? 'Membuat...' : 'PDF Resmi'}</span>
-                    </button>
+                  {/* LIVE CARD PREVIEW & EXPORT ACTIONS (RIGHT COLUMN) */}
+                  <div className="lg:col-span-6 space-y-4 sticky top-20">
+                    {/* Action Toolbar above Card */}
+                    <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3 no-print">
+                      <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                        <div className="flex items-center gap-2">
+                          <Eye className="w-4 h-4 text-amber-600" />
+                          <span className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                            Pratinjau Kartu Laporan
+                          </span>
+                        </div>
+                        <span className="text-[11px] text-slate-400 font-medium">
+                          Tampilan Ekspor JPG & PDF
+                        </span>
+                      </div>
 
-                    <button
-                      onClick={() => handleDownloadExcel()}
-                      className="px-2.5 py-2.5 bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-800 hover:to-teal-800 text-white rounded-xl text-xs font-bold shadow-xs transition-all flex flex-col items-center justify-center gap-1"
-                    >
-                      <FileSpreadsheet className="w-4 h-4 text-emerald-200" />
-                      <span>Unduh Excel</span>
-                    </button>
+                      {/* Primary Export Action Grid */}
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
+                        <button
+                          onClick={() => handleDownloadPdf()}
+                          disabled={downloadingPdf || downloading}
+                          className="px-2.5 py-2.5 bg-gradient-to-r from-rose-700 to-red-600 hover:from-rose-800 hover:to-red-700 text-white rounded-xl text-xs font-bold shadow-xs transition-all flex flex-col items-center justify-center gap-1 disabled:opacity-50 relative group"
+                        >
+                          <span className="absolute -top-1.5 right-1 px-1.5 py-0.2 bg-amber-300 text-amber-950 font-black text-[8px] rounded-full uppercase tracking-wider shadow-2xs">
+                            1 Lembar
+                          </span>
+                          <FileText className="w-4 h-4 text-rose-200" />
+                          <span>{downloadingPdf ? 'Membuat...' : 'PDF Resmi'}</span>
+                        </button>
 
-                    <button
-                      onClick={() => handleDownloadImage('jpg')}
-                      disabled={downloading || downloadingPdf}
-                      className="px-2.5 py-2.5 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white rounded-xl text-xs font-bold shadow-xs transition-all flex flex-col items-center justify-center gap-1 disabled:opacity-50"
-                    >
-                      <Download className="w-4 h-4 text-amber-200" />
-                      <span>{downloading ? 'Mengunduh...' : 'Unduh JPG'}</span>
-                    </button>
+                        <button
+                          onClick={() => handleDownloadExcel()}
+                          className="px-2.5 py-2.5 bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-800 hover:to-teal-800 text-white rounded-xl text-xs font-bold shadow-xs transition-all flex flex-col items-center justify-center gap-1"
+                        >
+                          <FileSpreadsheet className="w-4 h-4 text-emerald-200" />
+                          <span>Unduh Excel</span>
+                        </button>
 
-                    <button
-                      onClick={() => handleDownloadImage('png')}
-                      disabled={downloading || downloadingPdf}
-                      className="px-2.5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-xs transition-all flex flex-col items-center justify-center gap-1 disabled:opacity-50"
-                    >
-                      <FileImage className="w-4 h-4 text-slate-300" />
-                      <span>Unduh PNG</span>
-                    </button>
+                        <button
+                          onClick={() => handleDownloadImage('jpg')}
+                          disabled={downloading || downloadingPdf}
+                          className="px-2.5 py-2.5 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white rounded-xl text-xs font-bold shadow-xs transition-all flex flex-col items-center justify-center gap-1 disabled:opacity-50"
+                        >
+                          <Download className="w-4 h-4 text-amber-200" />
+                          <span>{downloading ? 'Mengunduh...' : 'Unduh JPG'}</span>
+                        </button>
 
-                    <button
-                      onClick={handleCopyTextWA}
-                      className="px-2.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs transition-all flex flex-col items-center justify-center gap-1"
-                    >
-                      {copiedSuccess ? (
-                        <>
-                          <Check className="w-4 h-4 text-emerald-200" />
-                          <span>Tersalin!</span>
-                        </>
-                      ) : (
-                        <>
-                          <Share2 className="w-4 h-4 text-emerald-200" />
-                          <span>Salin WA</span>
-                        </>
-                      )}
-                    </button>
+                        <button
+                          onClick={() => handleDownloadImage('png')}
+                          disabled={downloading || downloadingPdf}
+                          className="px-2.5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-xs transition-all flex flex-col items-center justify-center gap-1 disabled:opacity-50"
+                        >
+                          <FileImage className="w-4 h-4 text-slate-300" />
+                          <span>Unduh PNG</span>
+                        </button>
 
-                    <button
-                      onClick={handleOpenWA}
-                      className="px-2.5 py-2.5 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-bold shadow-xs transition-all flex flex-col items-center justify-center gap-1"
-                    >
-                      <Send className="w-4 h-4 text-teal-200" />
-                      <span>Kirim WA</span>
-                    </button>
+                        <button
+                          onClick={handleCopyTextWA}
+                          className="px-2.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs transition-all flex flex-col items-center justify-center gap-1"
+                        >
+                          {copiedSuccess ? (
+                            <>
+                              <Check className="w-4 h-4 text-emerald-200" />
+                              <span>Tersalin!</span>
+                            </>
+                          ) : (
+                            <>
+                              <Share2 className="w-4 h-4 text-emerald-200" />
+                              <span>Salin WA</span>
+                            </>
+                          )}
+                        </button>
+
+                        <button
+                          onClick={handleOpenWA}
+                          className="px-2.5 py-2.5 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-bold shadow-xs transition-all flex flex-col items-center justify-center gap-1"
+                        >
+                          <Send className="w-4 h-4 text-teal-200" />
+                          <span>Kirim WA</span>
+                        </button>
+                      </div>
+
+                      {/* Print Action Secondary */}
+                      <div className="flex items-center justify-between pt-1 text-[11px] text-slate-500">
+                        <span className="italic">💡 Rekomendasi: Gunakan <strong>Unduh PDF</strong> untuk hasil jernih dan anti-gagal di HP.</span>
+                        <button
+                          onClick={handlePrint}
+                          className="text-slate-500 hover:text-slate-800 font-semibold flex items-center gap-1 shrink-0 ml-2"
+                        >
+                          <Printer className="w-3.5 h-3.5" />
+                          <span>Cetak Browser</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* CARD PREVIEW RENDERER */}
+                    <div className="p-2 sm:p-4 bg-slate-200/50 rounded-2xl border border-slate-300/80 shadow-inner flex justify-center">
+                      <ReportCard report={report} />
+                    </div>
                   </div>
-
-                  {/* Print Action Secondary */}
-                  <div className="flex items-center justify-between pt-1 text-[11px] text-slate-500">
-                    <span className="italic">💡 Rekomendasi: Gunakan <strong>Unduh PDF</strong> untuk hasil jernih dan anti-gagal di HP.</span>
-                    <button
-                      onClick={handlePrint}
-                      className="text-slate-500 hover:text-slate-800 font-semibold flex items-center gap-1 shrink-0 ml-2"
-                    >
-                      <Printer className="w-3.5 h-3.5" />
-                      <span>Cetak Browser</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* CARD PREVIEW RENDERER */}
-                <div className="p-2 sm:p-4 bg-slate-200/50 rounded-2xl border border-slate-300/80 shadow-inner flex justify-center">
-                  <ReportCard report={report} />
                 </div>
               </div>
-            </div>
+            )}
+
+            {adminTab === 'billing' && (
+              <BillingSummaryView
+                reports={savedReports}
+                students={students}
+                billings={billings}
+                onSaveBilling={handleSaveBilling}
+                onDeleteBilling={handleDeleteBilling}
+              />
+            )}
+
+            {adminTab === 'video' && <AiVideoStudio report={report} />}
+
+            {adminTab === 'history' && (
+              <HistoryView
+                reports={savedReports}
+                onSelectReport={handleSelectFromHistory}
+                onDeleteReport={handleDeleteHistoryReport}
+                onDownloadReport={(item) => {
+                  setReport(item);
+                  setViewMode('admin');
+                  setAdminTab('create');
+                  setTimeout(() => {
+                    handleDownloadImage('jpg', item);
+                  }, 300);
+                }}
+                onDownloadPdf={(item) => {
+                  setReport(item);
+                  setViewMode('admin');
+                  setAdminTab('create');
+                  setTimeout(() => {
+                    handleDownloadPdf(item);
+                  }, 300);
+                }}
+                onDownloadExcel={(item) => {
+                  handleDownloadExcel(item);
+                }}
+              />
+            )}
+
+            {adminTab === 'students' && (
+              <StudentManagementView
+                students={students}
+                reports={savedReports}
+                onSaveStudent={handleSaveStudent}
+                onDeleteStudent={handleDeleteStudent}
+                onSelectStudentForReport={handleSelectStudentForReport}
+                onSelectStudentForCertificate={(st) => {
+                  setSelectedStudentForCert(st);
+                  setAdminTab('certificates');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+              />
+            )}
+
+            {adminTab === 'certificates' && (
+              <CertificateManagerView
+                students={students}
+                savedCertificates={savedCertificates}
+                onSaveCertificate={handleSaveCertificate}
+                onDeleteCertificate={handleDeleteCertificate}
+                selectedStudentForCert={selectedStudentForCert}
+              />
+            )}
+
+            {adminTab === 'photos' && (
+              <PhotoGalleryView
+                reports={savedReports}
+                standalonePhotos={standalonePhotos}
+                students={students}
+                onUploadPhoto={handleUploadPhoto}
+                onDeletePhoto={handleDeletePhoto}
+              />
+            )}
+
+            {adminTab === 'settings' && (
+              <SettingsView
+                settings={settings}
+                onSaveSettings={(newSet) => setSettings(newSet)}
+              />
+            )}
+
+            {adminTab === 'guide' && <GuideView />}
           </div>
         )}
-
-        {activeTab === 'billing' && (
-          <BillingSummaryView
-            reports={savedReports}
-            students={students}
-            billings={billings}
-            onSaveBilling={handleSaveBilling}
-            onDeleteBilling={handleDeleteBilling}
-          />
-        )}
-
-        {activeTab === 'video' && <AiVideoStudio report={report} />}
-
-        {activeTab === 'history' && (
-          <HistoryView
-            reports={savedReports}
-            onSelectReport={handleSelectFromHistory}
-            onDeleteReport={handleDeleteHistoryReport}
-            onDownloadReport={(item) => {
-              setReport(item);
-              setActiveTab('create');
-              setTimeout(() => {
-                handleDownloadImage('jpg', item);
-              }, 300);
-            }}
-            onDownloadPdf={(item) => {
-              setReport(item);
-              setActiveTab('create');
-              setTimeout(() => {
-                handleDownloadPdf(item);
-              }, 300);
-            }}
-            onDownloadExcel={(item) => {
-              handleDownloadExcel(item);
-            }}
-          />
-        )}
-
-        {activeTab === 'students' && (
-          <StudentManagementView
-            students={students}
-            reports={savedReports}
-            onSaveStudent={handleSaveStudent}
-            onDeleteStudent={handleDeleteStudent}
-            onSelectStudentForReport={handleSelectStudentForReport}
-          />
-        )}
-
-        {activeTab === 'settings' && (
-          <SettingsView
-            settings={settings}
-            onSaveSettings={(newSet) => setSettings(newSet)}
-          />
-        )}
-
-        {activeTab === 'guide' && <GuideView />}
       </main>
 
       {/* DIRECT ONLINE REPORT VIEWER MODAL FOR ADMIN */}
@@ -1007,7 +1325,8 @@ export default function App() {
                   onClick={() => {
                     setReport(directLinkReport);
                     setDirectLinkReport(null);
-                    setActiveTab('create');
+                    setViewMode('admin');
+                    setAdminTab('create');
                     window.history.pushState({}, '', window.location.pathname);
                   }}
                   className="px-3.5 py-2 text-xs font-bold text-amber-900 bg-amber-100 hover:bg-amber-200 rounded-xl transition-all flex items-center gap-1.5"
@@ -1218,14 +1537,139 @@ export default function App() {
       )}
 
       {/* FOOTER */}
-      <footer className="bg-white border-t border-slate-200 py-4 mt-auto no-print">
-        <div className="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500">
-          <p className="font-bold text-slate-800 font-serif-brand">
-            © 2026 Dessa Mentari Education — Tempat Belajar Terpercaya · Les Privat Keluarga Indonesia
-          </p>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            Pengajar Resmi: Deni Santoso, M.M & Sarah Syahidah Syahrudin, S.Pd
-          </p>
+      <footer className="bg-slate-900 text-slate-300 border-t border-slate-800 pt-10 pb-8 mt-auto no-print">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 pb-8 border-b border-slate-800">
+            {/* Kolom 1: Profil Lembaga */}
+            <div className="md:col-span-2 space-y-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-full bg-white p-1 border-2 border-orange-400 flex items-center justify-center shrink-0">
+                  <img
+                    src="/assets/aistudio/Logo_Pendidikan_Dessa_Mentari_6f1f1e2d.png"
+                    alt="Logo DME"
+                    className="w-full h-full object-contain"
+                    onError={(e) => {
+                      (e.target as HTMLElement).style.display = 'none';
+                    }}
+                  />
+                </div>
+                <div>
+                  <h4 className="font-sans font-black text-white text-base">
+                    Bimbel<span className="text-[#0047BA] bg-white px-1.5 py-0.2 rounded ml-1 text-sm font-black">DME</span> · Dessa Mentari Education
+                  </h4>
+                  <p className="text-[11px] text-orange-400 font-bold">
+                    Tempat Belajar Terpercaya · Les Privat Keluarga Indonesia
+                  </p>
+                </div>
+              </div>
+              <p className="text-xs text-slate-400 leading-relaxed max-w-md">
+                Bimbingan belajar premium &amp; les privat datang ke rumah dan online untuk jenjang TK/PAUD, SD, SMP, hingga SMA &amp; UTBK/SNBT dengan metode personal 1-on-1.
+              </p>
+              <div className="text-[11px] text-slate-400 pt-1">
+                <span className="text-slate-300 font-semibold">Dewan Pengajar Resmi:</span> Deni Santoso, M.M &amp; Sarah Syahidah Syahrudin, S.Pd
+              </div>
+            </div>
+
+            {/* Kolom 2: Navigasi Website */}
+            <div className="space-y-2.5">
+              <h5 className="text-xs font-bold uppercase tracking-wider text-amber-300">
+                Informasi &amp; Layanan
+              </h5>
+              <ul className="space-y-1.5 text-xs text-slate-400">
+                <li>
+                  <button
+                    onClick={() => {
+                      setViewMode('public');
+                      setPublicTab('home');
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className="hover:text-amber-300 transition-colors"
+                  >
+                    • Beranda Utama
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => {
+                      setViewMode('public');
+                      setPublicTab('about');
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className="hover:text-amber-300 transition-colors"
+                  >
+                    • Tentang Kami &amp; Visi Misi
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => {
+                      setViewMode('public');
+                      setPublicTab('packages');
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className="hover:text-amber-300 transition-colors"
+                  >
+                    • Pilihan Paket Kursus
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => {
+                      setViewMode('public');
+                      setPublicTab('calculator');
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className="hover:text-amber-300 transition-colors"
+                  >
+                    • Simulasi Biaya Les
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => {
+                      setViewMode('public');
+                      setPublicTab('student-report');
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className="hover:text-amber-300 transition-colors text-amber-300 font-medium"
+                  >
+                    • Cek Laporan Belajar Siswa
+                  </button>
+                </li>
+              </ul>
+            </div>
+
+            {/* Kolom 3: Kontak & Portal Admin */}
+            <div className="space-y-2.5">
+              <h5 className="text-xs font-bold uppercase tracking-wider text-amber-300">
+                Konsultasi &amp; Admin
+              </h5>
+              <div className="space-y-2 text-xs text-slate-400">
+                <p>📍 Layanan Guru Datang ke Rumah &amp; Online Interaktif</p>
+                <p>💬 Konsultasi: 0812-3456-7890</p>
+                <div className="pt-2">
+                  <button
+                    onClick={() => {
+                      setViewMode(viewMode === 'admin' ? 'public' : 'admin');
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-amber-950 bg-amber-400 hover:bg-amber-300 transition-all shadow-sm"
+                  >
+                    <span>{viewMode === 'admin' ? '🌐 Ke Halaman Depan' : '🔐 Portal Admin & Tutor'}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-2">
+            <p className="font-bold text-slate-400 font-serif-brand">
+              © 2026 Dessa Mentari Education. Hak Cipta Dilindungi Undang-Undang.
+            </p>
+            <p className="text-[11px] text-slate-500">
+              Sistem Manajemen Pendidikan &amp; Rapor Belajar Les Privat Mandiri
+            </p>
+          </div>
         </div>
       </footer>
     </div>

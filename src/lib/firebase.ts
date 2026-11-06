@@ -11,7 +11,7 @@ import {
   orderBy
 } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
-import { ReportData, StudentData, PhotoItem, BillingRecord } from '../types/report';
+import { ReportData, StudentData, PhotoItem, BillingRecord, CertificateData } from '../types/report';
 
 const app = initializeApp(firebaseConfig);
 
@@ -59,6 +59,7 @@ const REPORTS_COLLECTION = 'reports';
 const STUDENTS_COLLECTION = 'students';
 const PHOTOS_COLLECTION = 'photos';
 const BILLINGS_COLLECTION = 'billings';
+const CERTIFICATES_COLLECTION = 'certificates';
 
 // Save or update report in cloud
 export async function saveReportToCloud(report: ReportData): Promise<void> {
@@ -355,6 +356,89 @@ export function subscribeBillingsFromCloud(onData: (billings: BillingRecord[]) =
     if (onError) onError(err);
   });
 }
+
+// Save or update certificate in cloud
+export async function saveCertificateToCloud(cert: CertificateData): Promise<void> {
+  try {
+    const docRef = doc(db, CERTIFICATES_COLLECTION, cert.id);
+    const cleanPayload = {
+      certificateNumber: cert.certificateNumber || '',
+      studentId: cert.studentId || '',
+      namaSiswa: cert.namaSiswa || '',
+      jenjang: cert.jenjang || 'SD',
+      kelasGrade: cert.kelasGrade || '',
+      sekolah: cert.sekolah || '',
+      mataPelajaran: cert.mataPelajaran || '',
+      tipeSertifikat: cert.tipeSertifikat || 'Kelulusan Kursus',
+      predikat: cert.predikat || 'Sangat Memuaskan (A)',
+      nilaiAkhir: cert.nilaiAkhir ?? 90,
+      deskripsiKompetensi: cert.deskripsiKompetensi || '',
+      tanggalTerbit: cert.tanggalTerbit || new Date().toISOString().split('T')[0],
+      kotaTerbit: cert.kotaTerbit || 'Indonesia',
+      namaKepalaLembaga: cert.namaKepalaLembaga || 'Deni Santoso, M.M',
+      jabatanKepala: cert.jabatanKepala || 'Direktur Lembaga',
+      namaTutorPengampu: cert.namaTutorPengampu || 'Sarah Syahidah Syahrudin, S.Pd',
+      jabatanTutor: cert.jabatanTutor || 'Instruktur Pengampu',
+      theme: cert.theme || 'gold',
+      nomorWAOrangTua: cert.nomorWAOrangTua || '',
+      isVerified: cert.isVerified ?? true,
+      createdAt: cert.createdAt || new Date().toISOString()
+    };
+    await setDoc(docRef, cleanPayload, { merge: true });
+  } catch (err) {
+    handleFirestoreError(err, OperationType.WRITE, `certificates/${cert.id}`);
+  }
+}
+
+// Delete certificate from cloud
+export async function deleteCertificateFromCloud(id: string): Promise<void> {
+  try {
+    const docRef = doc(db, CERTIFICATES_COLLECTION, id);
+    await deleteDoc(docRef);
+  } catch (err) {
+    handleFirestoreError(err, OperationType.DELETE, `certificates/${id}`);
+  }
+}
+
+// Real-time listener for certificates
+export function subscribeCertificatesFromCloud(onData: (certs: CertificateData[]) => void, onError?: (err: Error) => void) {
+  const q = query(collection(db, CERTIFICATES_COLLECTION), orderBy('createdAt', 'desc'));
+  
+  return onSnapshot(q, (snapshot) => {
+    const certs: CertificateData[] = snapshot.docs.map(docSnap => {
+      const data = docSnap.data();
+      return {
+        id: docSnap.id,
+        certificateNumber: data.certificateNumber || '',
+        studentId: data.studentId || '',
+        namaSiswa: data.namaSiswa || '',
+        jenjang: data.jenjang || 'SD',
+        kelasGrade: data.kelasGrade || '',
+        sekolah: data.sekolah || '',
+        mataPelajaran: data.mataPelajaran || '',
+        tipeSertifikat: data.tipeSertifikat || 'Kelulusan Kursus',
+        predikat: data.predikat || 'Sangat Memuaskan (A)',
+        nilaiAkhir: data.nilaiAkhir ?? 90,
+        deskripsiKompetensi: data.deskripsiKompetensi || '',
+        tanggalTerbit: data.tanggalTerbit || '',
+        kotaTerbit: data.kotaTerbit || 'Indonesia',
+        namaKepalaLembaga: data.namaKepalaLembaga || 'Deni Santoso, M.M',
+        jabatanKepala: data.jabatanKepala || 'Direktur Lembaga',
+        namaTutorPengampu: data.namaTutorPengampu || 'Sarah Syahidah Syahrudin, S.Pd',
+        jabatanTutor: data.jabatanTutor || 'Instruktur Pengampu',
+        theme: data.theme || 'gold',
+        nomorWAOrangTua: data.nomorWAOrangTua || '',
+        isVerified: data.isVerified ?? true,
+        createdAt: data.createdAt || new Date().toISOString()
+      };
+    });
+    onData(certs);
+  }, (err) => {
+    console.error("Firestore certificates snapshot error:", err);
+    if (onError) onError(err);
+  });
+}
+
 
 
 

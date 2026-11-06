@@ -1,6 +1,7 @@
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { ReportData } from '../types/report';
+import { patchClonedDocumentStyles, sanitizeColorString } from './colorUtils';
 
 /**
  * Builds a clean, reliable filename based strictly on the student's name and date.
@@ -68,7 +69,16 @@ async function sanitizeClonedElement(clonedEl: HTMLElement) {
   clonedEl.style.transform = 'none';
   clonedEl.style.boxSizing = 'border-box';
   clonedEl.style.margin = '0 auto';
-  clonedEl.style.backgroundColor = '#ffffff';
+
+  // Sanitize all inline styles in the tree
+  const allNodes = [clonedEl, ...Array.from(clonedEl.querySelectorAll('*'))] as HTMLElement[];
+  for (const node of allNodes) {
+    if (node.style) {
+      if (node.style.color) node.style.color = sanitizeColorString(node.style.color);
+      if (node.style.backgroundColor) node.style.backgroundColor = sanitizeColorString(node.style.backgroundColor);
+      if (node.style.borderColor) node.style.borderColor = sanitizeColorString(node.style.borderColor);
+    }
+  }
 
   // Sanitize all images inside the clone
   const clonedImgs = Array.from(clonedEl.querySelectorAll('img'));
@@ -80,7 +90,7 @@ async function sanitizeClonedElement(clonedEl: HTMLElement) {
 }
 
 /**
- * Fast, reliable element capture using html2canvas without canvas tainting.
+ * Fast, reliable element capture using html2canvas with color space normalization.
  */
 export async function captureElementToCanvas(
   elementId: string,
@@ -127,11 +137,8 @@ export async function captureElementToCanvas(
       scrollY: 0,
       windowWidth: element.offsetWidth || 760,
       onclone: async (clonedDoc) => {
-        // Strip all stylesheets to completely prevent oklch/oklab color parsing crashes in html2canvas
-        const stylesheets = Array.from(clonedDoc.querySelectorAll('link[rel="stylesheet"], style'));
-        for (const sheet of stylesheets) {
-          sheet.remove();
-        }
+        // Intercept getComputedStyle to convert modern oklch/oklab colors into sRGB
+        patchClonedDocumentStyles(clonedDoc);
 
         const clonedEl = clonedDoc.getElementById(elementId);
         if (clonedEl) {
@@ -160,10 +167,7 @@ export async function captureElementToCanvas(
       scrollY: 0,
       windowWidth: element.offsetWidth || 760,
       onclone: async (clonedDoc) => {
-        const stylesheets = Array.from(clonedDoc.querySelectorAll('link[rel="stylesheet"], style'));
-        for (const sheet of stylesheets) {
-          sheet.remove();
-        }
+        patchClonedDocumentStyles(clonedDoc);
 
         const clonedEl = clonedDoc.getElementById(elementId);
         if (clonedEl) {

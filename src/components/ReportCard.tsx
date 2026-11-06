@@ -1,13 +1,9 @@
 import React from 'react';
-import { ReportData, CardTheme } from '../types/report';
+import { ReportData, CardTheme, CardLayout } from '../types/report';
 import { 
   Sun, 
   BookOpen, 
   User, 
-  Calendar, 
-  GraduationCap, 
-  CheckCircle2, 
-  Sparkles, 
   Clock, 
   Award,
   FileText,
@@ -15,7 +11,10 @@ import {
   Target,
   Camera,
   ShieldCheck,
-  Check
+  CheckCircle2,
+  Check,
+  Sparkles,
+  Zap
 } from 'lucide-react';
 
 interface ReportCardProps {
@@ -134,6 +133,7 @@ function getScorePredicate(score: number): { label: string; color: string; badge
 }
 
 export const ReportCard: React.FC<ReportCardProps> = ({ report }) => {
+  const layout: CardLayout = report.cardLayout || 'elegant';
   const t = themeStyles[report.theme || 'solar'];
   const isDark = report.theme === 'dark';
 
@@ -159,6 +159,419 @@ export const ReportCard: React.FC<ReportCardProps> = ({ report }) => {
   const keaktifanPred = getScorePredicate(keaktifanScore);
   const fokusPred = getScorePredicate(fokusScore);
 
+  // ==========================================
+  // 1. MINIMALIST LAYOUT (CLEAN SCANDINAVIAN)
+  // ==========================================
+  if (layout === 'minimalist') {
+    return (
+      <div
+        id="report-card-container"
+        className="w-full max-w-[760px] mx-auto rounded-xl shadow-lg overflow-hidden border border-slate-300 bg-white text-slate-800 transition-all font-sans print:border-none print:shadow-none print:max-w-none print:w-full"
+        style={{ boxSizing: 'border-box' }}
+      >
+        {/* Minimalist Top Hairline */}
+        <div className="h-1 w-full bg-slate-900"></div>
+
+        {/* Clean Header */}
+        <div className="p-6 bg-slate-50/70 border-b border-slate-200">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="w-14 h-14 rounded-lg bg-white p-1.5 shadow-2xs border border-slate-200 flex items-center justify-center shrink-0">
+                <img
+                  src="/assets/aistudio/Logo_Pendidikan_Dessa_Mentari_6f1f1e2d.png"
+                  alt="Logo"
+                  crossOrigin="anonymous"
+                  loading="eager"
+                  className="w-full h-full object-contain"
+                  onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
+                />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 block">
+                  Lembaga Bimbingan Belajar Privat
+                </span>
+                <h1 className="text-xl font-black tracking-tight text-slate-900 font-serif-brand">
+                  Dessa Mentari Education
+                </h1>
+                <p className="text-xs text-slate-500">
+                  Tempat Belajar Terpercaya · Les Privat Keluarga Indonesia
+                </p>
+              </div>
+            </div>
+
+            <div className="text-left sm:text-right border-t sm:border-t-0 border-slate-200 pt-2 sm:pt-0 w-full sm:w-auto">
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-slate-200/80 text-slate-700">
+                {serialNo}
+              </span>
+              <p className="text-[11px] text-slate-500 mt-1">
+                {formattedDate}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Minimalist Body Content */}
+        <div className="p-4 sm:p-5 space-y-3.5 bg-white">
+          {/* Identity Grid */}
+          <div className="p-3 rounded-lg border border-slate-200 bg-slate-50/40 text-xs">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div>
+                <span className="text-[10px] text-slate-400 block uppercase font-semibold">Siswa</span>
+                <span className="font-extrabold text-slate-900 text-sm">{report.namaSiswa || 'Kevin Pratama'}</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-slate-400 block uppercase font-semibold">Jenjang & Kelas</span>
+                <span className="font-bold text-slate-800">{report.jenjang} {report.kelasGrade ? `(${report.kelasGrade})` : ''}</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-slate-400 block uppercase font-semibold">Mata Pelajaran</span>
+                <span className="font-bold text-slate-900">{report.mataPelajaran || 'Matematika'}</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-slate-400 block uppercase font-semibold">Waktu / Status</span>
+                <span className="font-semibold text-slate-700">{report.waktuDurasi || '90 Menit'} · {report.statusKehadiran}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Minimalist Metrics Table */}
+          <div className="p-3 rounded-lg border border-slate-200">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+              Indikator Capaian Belajar (Skala 0 - 100%)
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+              <div>
+                <div className="flex justify-between font-semibold mb-1">
+                  <span>Pemahaman Materi</span>
+                  <span className="font-mono font-bold">{pemahamanScore}%</span>
+                </div>
+                <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                  <div className="bg-slate-800 h-full rounded-full" style={{ width: `${pemahamanScore}%` }}></div>
+                </div>
+                <span className="text-[10px] text-slate-500 mt-1 block">{pemahamanPred.label}</span>
+              </div>
+
+              <div>
+                <div className="flex justify-between font-semibold mb-1">
+                  <span>Keaktifan Belajar</span>
+                  <span className="font-mono font-bold">{keaktifanScore}%</span>
+                </div>
+                <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                  <div className="bg-slate-800 h-full rounded-full" style={{ width: `${keaktifanScore}%` }}></div>
+                </div>
+                <span className="text-[10px] text-slate-500 mt-1 block">{keaktifanPred.label}</span>
+              </div>
+
+              <div>
+                <div className="flex justify-between font-semibold mb-1">
+                  <span>Fokus & Konsentrasi</span>
+                  <span className="font-mono font-bold">{fokusScore}%</span>
+                </div>
+                <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                  <div className="bg-slate-800 h-full rounded-full" style={{ width: `${fokusScore}%` }}></div>
+                </div>
+                <span className="text-[10px] text-slate-500 mt-1 block">{fokusPred.label}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Materi */}
+          <div className="p-3.5 rounded-lg border border-slate-200">
+            <span className="text-[10.5px] font-bold uppercase tracking-wider text-slate-500 block mb-1">
+              Materi & Pokok Bahasan
+            </span>
+            <div className="text-xs text-slate-800 whitespace-pre-line leading-relaxed">
+              {report.materiDipelajari || 'Rincian topik sesi les.'}
+            </div>
+          </div>
+
+          {/* Evaluasi */}
+          <div className="p-3.5 rounded-lg border border-slate-200 bg-slate-50/60">
+            <span className="text-[10.5px] font-bold uppercase tracking-wider text-slate-500 block mb-1">
+              Evaluasi Perkembangan Siswa
+            </span>
+            <div className="text-xs text-slate-800 whitespace-pre-line leading-relaxed">
+              {report.evaluasiSiswa || 'Observasi hasil sesi belajar.'}
+            </div>
+          </div>
+
+          {/* Homework & Note */}
+          {(report.tugasRumah || report.catatanOrangTua) && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              {report.tugasRumah && (
+                <div className="p-3 rounded-lg border border-slate-200">
+                  <span className="text-[10px] font-bold uppercase text-slate-400 block mb-1">PR / Tugas Rumah</span>
+                  <div className="text-slate-800 whitespace-pre-line leading-relaxed">{report.tugasRumah}</div>
+                </div>
+              )}
+              {report.catatanOrangTua && (
+                <div className="p-3 rounded-lg border border-slate-200 bg-slate-50/40">
+                  <span className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Catatan Orang Tua</span>
+                  <div className="text-slate-700 italic leading-relaxed">"{report.catatanOrangTua}"</div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Documentation Photos if available */}
+          {report.fotoDokumentasi && report.fotoDokumentasi.length > 0 && (
+            <div className="p-3 rounded-lg border border-slate-200">
+              <span className="text-[10.5px] font-bold uppercase tracking-wider text-slate-500 block mb-2">
+                Dokumentasi Pembelajaran ({report.fotoDokumentasi.length} Foto)
+              </span>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {report.fotoDokumentasi.map((photo, idx) => (
+                  <div key={photo.id || idx} className="rounded border border-slate-200 overflow-hidden">
+                    <img src={photo.url} alt="" className="w-full aspect-4/3 object-cover" crossOrigin="anonymous" />
+                    <div className="p-1 text-[8px] text-slate-600 truncate">{photo.caption || 'Dokumentasi Sesi'}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Minimalist Endorsement */}
+          <div className="pt-3 border-t border-slate-200 grid grid-cols-2 gap-4 items-end text-xs">
+            <div>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Validasi Dokumen</span>
+              <span className="text-[11px] font-semibold text-slate-700 block">Dessa Mentari Education</span>
+              <span className="text-[9.5px] text-slate-400 italic">Mengetahui Orang Tua / Wali Siswa</span>
+            </div>
+            <div className="text-right">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Tutor Pendamping</span>
+              <p className="font-extrabold text-slate-900 text-xs border-b border-slate-300 pb-0.5 inline-block min-w-[130px]">
+                {report.namaPengajar || 'Pengajar DME'}
+              </p>
+              <span className="text-[9px] text-slate-400 block mt-0.5">[ Terverifikasi Digital ]</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Minimal Footer */}
+        <div className="px-5 py-2 bg-slate-100 text-slate-500 text-[9px] border-t border-slate-200 flex justify-between">
+          <span>© 2026 Dessa Mentari Education</span>
+          <span>Lembar Evaluasi Resmi · {serialNo}</span>
+        </div>
+      </div>
+    );
+  }
+
+  // ==========================================
+  // 2. BOLD LAYOUT (HIGH IMPACT & VIBRANT)
+  // ==========================================
+  if (layout === 'bold') {
+    return (
+      <div
+        id="report-card-container"
+        className="w-full max-w-[760px] mx-auto rounded-xl shadow-2xl overflow-hidden border-2 border-slate-900 bg-white text-slate-900 transition-all font-sans print:border-none print:shadow-none print:max-w-none print:w-full"
+        style={{ boxSizing: 'border-box' }}
+      >
+        {/* Bold Accent Header Strip */}
+        <div className="h-2 w-full bg-amber-500"></div>
+
+        {/* High Contrast Header */}
+        <div className="bg-slate-950 p-5 sm:p-6 text-white relative">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="w-16 h-16 rounded-xl bg-amber-400 p-2 shadow-lg flex items-center justify-center shrink-0 border-2 border-white">
+                <img
+                  src="/assets/aistudio/Logo_Pendidikan_Dessa_Mentari_6f1f1e2d.png"
+                  alt="Logo"
+                  crossOrigin="anonymous"
+                  loading="eager"
+                  className="w-full h-full object-contain"
+                  onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
+                />
+              </div>
+
+              <div>
+                <span className="bg-amber-500 text-slate-950 text-[10px] font-black uppercase px-2 py-0.5 rounded tracking-wider">
+                  LAPORAN HASIL BELAJAR RESMI
+                </span>
+                <h1 className="text-2xl font-black tracking-tight text-white font-serif-brand mt-1">
+                  DESSA MENTARI EDUCATION
+                </h1>
+                <p className="text-xs font-semibold text-amber-300">
+                  Tempat Belajar Terpercaya · Les Privat Keluarga Indonesia
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-slate-900 border border-amber-500/50 p-2.5 rounded-xl text-right shrink-0">
+              <div className="flex items-center gap-1.5 justify-end text-amber-400 text-xs font-bold">
+                <ShieldCheck className="w-4 h-4" />
+                <span>TERVALIDASI</span>
+              </div>
+              <span className="font-mono text-[11px] text-white font-bold block mt-0.5">{serialNo}</span>
+              <span className="text-[10px] text-slate-400 block">{formattedDate}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Bold Body */}
+        <div className="p-4 sm:p-5 space-y-3.5 bg-slate-50">
+          {/* Identity Card Block */}
+          <div className="bg-white p-3.5 rounded-xl border-2 border-slate-900 shadow-sm">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+              <div className="border-r border-slate-200 pr-2">
+                <span className="text-[10px] font-black text-amber-600 uppercase">Nama Siswa</span>
+                <div className="text-sm font-black text-slate-900 truncate">{report.namaSiswa || 'Kevin Pratama'}</div>
+              </div>
+              <div className="border-r border-slate-200 pr-2">
+                <span className="text-[10px] font-black text-slate-400 uppercase">Jenjang</span>
+                <div className="text-xs font-extrabold text-slate-800">{report.jenjang} {report.kelasGrade ? `(${report.kelasGrade})` : ''}</div>
+              </div>
+              <div className="border-r border-slate-200 pr-2">
+                <span className="text-[10px] font-black text-slate-400 uppercase">Mata Pelajaran</span>
+                <div className="text-xs font-extrabold text-slate-900 bg-amber-100/70 px-1.5 py-0.5 rounded inline-block">
+                  {report.mataPelajaran || 'Matematika'}
+                </div>
+              </div>
+              <div>
+                <span className="text-[10px] font-black text-slate-400 uppercase">Durasi / Status</span>
+                <div className="text-xs font-bold text-slate-800">{report.waktuDurasi || '90 Menit'} · {report.statusKehadiran}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* High-Impact Stat Score Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="bg-white p-3.5 rounded-xl border-2 border-slate-900 shadow-sm flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-extrabold uppercase text-slate-700 flex items-center gap-1">
+                  <Zap className="w-3.5 h-3.5 text-amber-500" />
+                  Pemahaman
+                </span>
+                <span className="text-xl font-black text-slate-900">{pemahamanScore}%</span>
+              </div>
+              <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden my-2 border border-slate-300">
+                <div className="bg-amber-500 h-full rounded-full" style={{ width: `${pemahamanScore}%` }}></div>
+              </div>
+              <span className="text-[10px] font-black px-2 py-0.5 rounded bg-amber-100 text-amber-900 text-center">
+                {pemahamanPred.label}
+              </span>
+            </div>
+
+            <div className="bg-white p-3.5 rounded-xl border-2 border-slate-900 shadow-sm flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-extrabold uppercase text-slate-700 flex items-center gap-1">
+                  <Check className="w-3.5 h-3.5 text-emerald-600" />
+                  Keaktifan
+                </span>
+                <span className="text-xl font-black text-slate-900">{keaktifanScore}%</span>
+              </div>
+              <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden my-2 border border-slate-300">
+                <div className="bg-emerald-600 h-full rounded-full" style={{ width: `${keaktifanScore}%` }}></div>
+              </div>
+              <span className="text-[10px] font-black px-2 py-0.5 rounded bg-emerald-100 text-emerald-900 text-center">
+                {keaktifanPred.label}
+              </span>
+            </div>
+
+            <div className="bg-white p-3.5 rounded-xl border-2 border-slate-900 shadow-sm flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-extrabold uppercase text-slate-700 flex items-center gap-1">
+                  <Target className="w-3.5 h-3.5 text-indigo-600" />
+                  Fokus Belajar
+                </span>
+                <span className="text-xl font-black text-slate-900">{fokusScore}%</span>
+              </div>
+              <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden my-2 border border-slate-300">
+                <div className="bg-indigo-600 h-full rounded-full" style={{ width: `${fokusScore}%` }}></div>
+              </div>
+              <span className="text-[10px] font-black px-2 py-0.5 rounded bg-indigo-100 text-indigo-900 text-center">
+                {fokusPred.label}
+              </span>
+            </div>
+          </div>
+
+          {/* Materi Block with Bold Accent */}
+          <div className="bg-white rounded-xl border-2 border-slate-900 shadow-sm overflow-hidden">
+            <div className="bg-slate-900 text-amber-400 px-3.5 py-1.5 text-xs font-black uppercase tracking-wider flex items-center gap-2">
+              <BookOpen className="w-3.5 h-3.5" />
+              <span>Pokok Bahasan & Materi Pembelajaran Hari Ini</span>
+            </div>
+            <div className="p-3.5 text-xs font-medium text-slate-800 whitespace-pre-line leading-relaxed">
+              {report.materiDipelajari || 'Rincian topik sesi les.'}
+            </div>
+          </div>
+
+          {/* Evaluasi Block */}
+          <div className="bg-white rounded-xl border-2 border-slate-900 shadow-sm overflow-hidden">
+            <div className="bg-amber-500 text-slate-950 px-3.5 py-1.5 text-xs font-black uppercase tracking-wider flex items-center gap-2">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Evaluasi & Catatan Perkembangan Siswa</span>
+            </div>
+            <div className="p-3.5 text-xs font-medium text-slate-800 whitespace-pre-line leading-relaxed border-l-4 border-amber-500 bg-amber-50/20 m-2 rounded-r-lg">
+              {report.evaluasiSiswa || 'Observasi hasil sesi belajar.'}
+            </div>
+          </div>
+
+          {/* Homework & Notes */}
+          {(report.tugasRumah || report.catatanOrangTua) && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              {report.tugasRumah && (
+                <div className="bg-white p-3 rounded-xl border-2 border-slate-900">
+                  <span className="font-black uppercase text-amber-800 text-[10px] block mb-1">PR / Tugas Rumah:</span>
+                  <div className="text-slate-800 whitespace-pre-line font-medium leading-relaxed">{report.tugasRumah}</div>
+                </div>
+              )}
+              {report.catatanOrangTua && (
+                <div className="bg-white p-3 rounded-xl border-2 border-slate-900">
+                  <span className="font-black uppercase text-slate-500 text-[10px] block mb-1">Catatan Orang Tua:</span>
+                  <div className="text-slate-700 italic font-medium leading-relaxed">"{report.catatanOrangTua}"</div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Photos */}
+          {report.fotoDokumentasi && report.fotoDokumentasi.length > 0 && (
+            <div className="bg-white p-3 rounded-xl border-2 border-slate-900">
+              <div className="text-xs font-black uppercase tracking-wider text-slate-900 mb-2 flex items-center gap-1.5">
+                <Camera className="w-3.5 h-3.5 text-amber-600" />
+                <span>Dokumentasi Pembelajaran Berlogo Resmi ({report.fotoDokumentasi.length} Foto)</span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {report.fotoDokumentasi.map((photo, idx) => (
+                  <div key={photo.id || idx} className="rounded-lg border-2 border-slate-900 overflow-hidden bg-white">
+                    <img src={photo.url} alt="" className="w-full aspect-4/3 object-cover" crossOrigin="anonymous" />
+                    <div className="p-1 text-[8.5px] font-bold text-slate-900 bg-amber-50 truncate">{photo.caption || 'Foto Sesi'}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Bold Signature Block */}
+          <div className="pt-3 border-t-2 border-slate-900 grid grid-cols-2 gap-4 items-end text-xs">
+            <div>
+              <div className="font-black text-slate-900 uppercase text-xs">Dessa Mentari Education</div>
+              <div className="text-[10px] text-slate-500">Pusat Bimbingan Belajar & Les Privat Terpadu</div>
+              <div className="text-[10px] text-slate-400 italic mt-1">Mengetahui Orang Tua / Wali Siswa</div>
+            </div>
+            <div className="text-right">
+              <span className="text-[10px] font-black uppercase text-amber-600 block">Tutor Pendamping</span>
+              <p className="font-black text-slate-950 text-sm border-b-2 border-slate-900 pb-0.5 inline-block min-w-[140px]">
+                {report.namaPengajar || 'Pengajar DME'}
+              </p>
+              <div className="text-[9.5px] font-mono font-bold text-slate-500 mt-0.5">[ ID Terverifikasi Digital ]</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Bold Footer */}
+        <div className="bg-slate-950 text-amber-400 px-5 py-2 text-[10px] font-bold flex justify-between items-center border-t border-amber-500">
+          <span>© 2026 Dessa Mentari Education · Hak Cipta Dilindungi</span>
+          <span className="font-mono text-white">{serialNo}</span>
+        </div>
+      </div>
+    );
+  }
+
+  // ==========================================
+  // 3. ELEGANT LAYOUT (CLASSIC INSTITUTIONAL - DEFAULT)
+  // ==========================================
   return (
     <div
       id="report-card-container"

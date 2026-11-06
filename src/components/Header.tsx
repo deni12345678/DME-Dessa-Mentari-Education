@@ -1,7 +1,7 @@
 import React from 'react';
-import { Download, History, Settings, FilePlus, HelpCircle, Film, GraduationCap, Camera, DollarSign, Smartphone, FileText } from 'lucide-react';
+import { Download, History, Settings, FilePlus, HelpCircle, Film, GraduationCap, Camera, DollarSign, Smartphone, FileText, Compass, Sparkles } from 'lucide-react';
 
-export type ActiveTabType = 'create' | 'students' | 'photos' | 'billing' | 'video' | 'history' | 'settings' | 'guide';
+export type ActiveTabType = 'institution' | 'create' | 'students' | 'photos' | 'billing' | 'video' | 'history' | 'settings' | 'guide';
 
 interface HeaderProps {
   activeTab: ActiveTabType;
@@ -67,7 +67,24 @@ export const Header: React.FC<HeaderProps> = ({
         </button>
 
         {/* Zone 2: Concise nav links */}
-        <nav className="hidden md:flex items-center gap-5 text-xs font-semibold text-slate-600">
+        <nav className="hidden md:flex items-center gap-4 text-xs font-semibold text-slate-600">
+          <button
+            onClick={() => onTabChange('institution')}
+            className={`flex items-center gap-1.5 py-1.5 transition-colors whitespace-nowrap shrink-0 ${
+              activeTab === 'institution'
+                ? 'text-amber-800 font-extrabold border-b-2 border-amber-600'
+                : 'hover:text-slate-900 text-slate-700'
+            }`}
+          >
+            <Compass className="w-4 h-4 text-amber-600" />
+            <span className="flex items-center gap-1">
+              Profil & Paket Kursus
+              <span className="text-[9px] bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black px-1.5 py-0.2 rounded shadow-2xs">
+                PROFIL
+              </span>
+            </span>
+          </button>
+
           <button
             onClick={() => onTabChange('create')}
             className={`flex items-center gap-1.5 py-1.5 transition-colors whitespace-nowrap shrink-0 ${
@@ -77,7 +94,7 @@ export const Header: React.FC<HeaderProps> = ({
             }`}
           >
             <FilePlus className="w-4 h-4" />
-            <span>Input Laporan (Admin)</span>
+            <span>Input Laporan</span>
           </button>
 
           <button
@@ -249,6 +266,15 @@ export const Header: React.FC<HeaderProps> = ({
             <span>📱 Tempel di HP</span>
           </button>
         )}
+        <button
+          onClick={() => onTabChange('institution')}
+          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap shrink-0 ${
+            activeTab === 'institution' ? 'bg-amber-600 text-white font-bold shadow-2xs' : 'text-slate-700 bg-white border border-slate-200'
+          }`}
+        >
+          <Compass className="w-3.5 h-3.5 text-amber-500" />
+          <span>Profil & Paket</span>
+        </button>
         <button
           onClick={() => onTabChange('create')}
           className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap shrink-0 ${

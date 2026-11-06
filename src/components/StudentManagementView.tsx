@@ -19,7 +19,8 @@ import {
   Sparkles,
   BarChart2,
   ChevronRight,
-  GraduationCap
+  GraduationCap,
+  Award
 } from 'lucide-react';
 
 interface StudentManagementViewProps {
@@ -28,6 +29,7 @@ interface StudentManagementViewProps {
   onSaveStudent: (student: StudentData) => void;
   onDeleteStudent: (id: string) => void;
   onSelectStudentForReport: (student: StudentData) => void;
+  onSelectStudentForCertificate?: (student: StudentData) => void;
 }
 
 const EDUCATION_LEVELS: EducationLevel[] = ['TK', 'SD', 'SMP', 'SMA', 'Umum/PAUD'];
@@ -39,6 +41,7 @@ export const StudentManagementView: React.FC<StudentManagementViewProps> = ({
   onSaveStudent,
   onDeleteStudent,
   onSelectStudentForReport,
+  onSelectStudentForCertificate,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'Semua' | StudentStatus>('Semua');
@@ -430,6 +433,18 @@ export const StudentManagementView: React.FC<StudentManagementViewProps> = ({
                         <span>Edit Data</span>
                       </button>
                     )}
+
+                    {onSelectStudentForCertificate && (
+                      <button
+                        type="button"
+                        onClick={() => onSelectStudentForCertificate(student)}
+                        className="col-span-2 py-1.5 px-3 text-xs font-bold text-amber-900 bg-amber-100/90 hover:bg-amber-200 active:scale-95 rounded-xl transition-all flex items-center justify-center gap-1.5 border border-amber-300/70"
+                        title="Terbitkan sertifikat kelulusan / kompetensi otomatis"
+                      >
+                        <Award className="w-3.5 h-3.5 text-amber-700" />
+                        <span>🎓 Terbitkan Sertifikat Siswa</span>
+                      </button>
+                    )}
                   </div>
 
                   {/* Secondary Edit / Delete Bar */}
@@ -758,18 +773,34 @@ export const StudentManagementView: React.FC<StudentManagementViewProps> = ({
               )}
             </div>
 
-            <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-              <button
-                type="button"
-                onClick={() => {
-                  onSelectStudentForReport(viewingDetailStudent);
-                  setViewingDetailStudent(null);
-                }}
-                className="px-4 py-2 text-xs font-bold text-amber-950 bg-amber-300 hover:bg-amber-200 rounded-xl transition-all inline-flex items-center gap-1.5"
-              >
-                <BookOpen className="w-4 h-4" />
-                <span>Buat Laporan Pembelajaran Baru</span>
-              </button>
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-100">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onSelectStudentForReport(viewingDetailStudent);
+                    setViewingDetailStudent(null);
+                  }}
+                  className="px-4 py-2 text-xs font-bold text-amber-950 bg-amber-300 hover:bg-amber-200 rounded-xl transition-all inline-flex items-center gap-1.5"
+                >
+                  <BookOpen className="w-4 h-4" />
+                  <span>Buat Laporan Baru</span>
+                </button>
+
+                {onSelectStudentForCertificate && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onSelectStudentForCertificate(viewingDetailStudent);
+                      setViewingDetailStudent(null);
+                    }}
+                    className="px-3.5 py-2 text-xs font-bold text-amber-900 bg-amber-100 hover:bg-amber-200 rounded-xl transition-all inline-flex items-center gap-1.5 border border-amber-300"
+                  >
+                    <Award className="w-4 h-4 text-amber-700" />
+                    <span>Terbitkan Sertifikat</span>
+                  </button>
+                )}
+              </div>
 
               <button
                 type="button"
