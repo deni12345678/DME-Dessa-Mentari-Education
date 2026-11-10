@@ -39,7 +39,7 @@ export const PublicHomeView: React.FC<PublicHomeViewProps> = ({
   const [selectedGrade, setSelectedGrade] = useState<HeroGradeLevel>('sd');
 
   const handleConsultWhatsApp = (topic?: string) => {
-    const phone = (settings.nomorWA || '6281234567890').replace(/[^0-9]/g, '');
+    const phone = (settings.nomorWA || '6287879069404').replace(/[^0-9]/g, '');
     const topicText = topic ? `tentang ${topic}` : 'mengenai bimbingan les privat Bimbel DME (Dessa Mentari Education)';
     const text = encodeURIComponent(
       `Halo Admin Bimbel DME (Dessa Mentari Education),\n\nSaya ingin berkonsultasi ${topicText} untuk putra/putri saya.\nBisa mohon informasi jadwal tutor dan biayanya?\n\nTerima kasih!`
@@ -484,7 +484,7 @@ export const PublicHomeView: React.FC<PublicHomeViewProps> = ({
       {/* 6. FLOATING WHATSAPP BUTTON (MATCHING REFERENCE IMAGE) */}
       {/* ======================================================== */}
       <a
-        href={`https://wa.me/${(settings.nomorWA || '6281234567890').replace(/[^0-9]/g, '')}?text=Halo%20Admin%20Bimbel%20DME,%20saya%20ingin%20konsultasi%20les%20privat.`}
+        href={`https://wa.me/${(settings.nomorWA || '6287879069404').replace(/[^0-9]/g, '')}?text=Halo%20Admin%20Bimbel%20DME,%20saya%20ingin%20konsultasi%20les%20privat.`}
         target="_blank"
         rel="noreferrer"
         className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-[#25D366] hover:bg-[#20BD5A] text-white shadow-2xl flex items-center justify-center transition-all hover:scale-110 active:scale-95 group"

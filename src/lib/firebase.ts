@@ -11,7 +11,7 @@ import {
   orderBy
 } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
-import { ReportData, StudentData, PhotoItem, BillingRecord, CertificateData } from '../types/report';
+import { ReportData, StudentData, PhotoItem, BillingRecord, CertificateData, TeacherData } from '../types/report';
 
 const app = initializeApp(firebaseConfig);
 
@@ -60,6 +60,7 @@ const STUDENTS_COLLECTION = 'students';
 const PHOTOS_COLLECTION = 'photos';
 const BILLINGS_COLLECTION = 'billings';
 const CERTIFICATES_COLLECTION = 'certificates';
+const TEACHERS_COLLECTION = 'teachers';
 
 // Save or update report in cloud
 export async function saveReportToCloud(report: ReportData): Promise<void> {
@@ -78,6 +79,8 @@ export async function saveReportToCloud(report: ReportData): Promise<void> {
       tugasRumah: report.tugasRumah || '',
       catatanOrtu: report.catatanOrangTua || '',
       namaPengajar: report.namaPengajar || 'Dessa Mentari Team',
+      sesiKe: Number(report.sesiKe) || 1,
+      pemahamanScale: Number(report.pemahamanScale) || 4,
       skorPemahaman: Number(report.skorPemahaman) || 80,
       skorKeaktifan: Number(report.skorKeaktifan) || 80,
       skorFokus: Number(report.skorFokus) || 80,
@@ -117,6 +120,8 @@ export function subscribeReportsFromCloud(onData: (reports: ReportData[]) => voi
         kelasGrade: data.kelasGrade || '',
         mataPelajaran: data.mataPelajaran || '',
         statusKehadiran: data.statusKehadiran || 'Hadir',
+        sesiKe: data.sesiKe ? Number(data.sesiKe) : 1,
+        pemahamanScale: (data.pemahamanScale ? Number(data.pemahamanScale) : 4) as (1 | 2 | 3 | 4 | 5),
         materiDipelajari: data.materi || data.materiDipelajari || '',
         evaluasiSiswa: data.perkembangan || data.evaluasiSiswa || '',
         tugasRumah: data.tugasRumah || '',
@@ -156,6 +161,7 @@ export async function saveStudentToCloud(student: StudentData): Promise<void> {
       namaPengajar: student.namaPengajar || '',
       status: student.status || 'Aktif',
       catatanKhusus: student.catatanKhusus || '',
+      fotoSiswa: student.fotoSiswa || '',
       createdAt: student.createdAt || new Date().toISOString()
     };
     await setDoc(docRef, cleanPayload, { merge: true });
@@ -197,6 +203,7 @@ export function subscribeStudentsFromCloud(onData: (students: StudentData[]) => 
         namaPengajar: data.namaPengajar || '',
         status: data.status || 'Aktif',
         catatanKhusus: data.catatanKhusus || '',
+        fotoSiswa: data.fotoSiswa || '',
         createdAt: data.createdAt || new Date().toISOString()
       };
     });
@@ -435,6 +442,76 @@ export function subscribeCertificatesFromCloud(onData: (certs: CertificateData[]
     onData(certs);
   }, (err) => {
     console.error("Firestore certificates snapshot error:", err);
+    if (onError) onError(err);
+  });
+}
+
+// ==========================================
+// TEACHER (GURU) FIRESTORE OPERATIONS
+// ==========================================
+
+// Save or update teacher in cloud
+export async function saveTeacherToCloud(teacher: TeacherData): Promise<void> {
+  try {
+    const docRef = doc(db, TEACHERS_COLLECTION, teacher.id);
+    const cleanPayload = {
+      namaLengkap: teacher.namaLengkap || '',
+      gelar: teacher.gelar || '',
+      email: teacher.email || '',
+      nomorWA: teacher.nomorWA || '',
+      mataPelajaran: Array.isArray(teacher.mataPelajaran) ? teacher.mataPelajaran : [],
+      jenjang: Array.isArray(teacher.jenjang) ? teacher.jenjang : ['SD'],
+      areaDomisili: teacher.areaDomisili || '',
+      status: teacher.status || 'Aktif',
+      username: teacher.username || '',
+      initialPassword: teacher.initialPassword || '',
+      catatanKhusus: teacher.catatanKhusus || '',
+      createdAt: teacher.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    await setDoc(docRef, cleanPayload, { merge: true });
+  } catch (err) {
+    handleFirestoreError(err, OperationType.WRITE, `teachers/${teacher.id}`);
+  }
+}
+
+// Delete teacher from cloud
+export async function deleteTeacherFromCloud(id: string): Promise<void> {
+  try {
+    const docRef = doc(db, TEACHERS_COLLECTION, id);
+    await deleteDoc(docRef);
+  } catch (err) {
+    handleFirestoreError(err, OperationType.DELETE, `teachers/${id}`);
+  }
+}
+
+// Real-time listener for teachers
+export function subscribeTeachersFromCloud(onData: (teachers: TeacherData[]) => void, onError?: (err: Error) => void) {
+  const q = query(collection(db, TEACHERS_COLLECTION), orderBy('createdAt', 'desc'));
+  
+  return onSnapshot(q, (snapshot) => {
+    const teachers: TeacherData[] = snapshot.docs.map(docSnap => {
+      const data = docSnap.data();
+      return {
+        id: docSnap.id,
+        namaLengkap: data.namaLengkap || '',
+        gelar: data.gelar || '',
+        email: data.email || '',
+        nomorWA: data.nomorWA || '',
+        mataPelajaran: Array.isArray(data.mataPelajaran) ? data.mataPelajaran : [],
+        jenjang: Array.isArray(data.jenjang) ? data.jenjang : ['SD'],
+        areaDomisili: data.areaDomisili || '',
+        status: data.status || 'Aktif',
+        username: data.username || '',
+        initialPassword: data.initialPassword || '',
+        catatanKhusus: data.catatanKhusus || '',
+        createdAt: data.createdAt || new Date().toISOString(),
+        updatedAt: data.updatedAt || ''
+      };
+    });
+    onData(teachers);
+  }, (err) => {
+    console.error("Firestore teachers snapshot error:", err);
     if (onError) onError(err);
   });
 }

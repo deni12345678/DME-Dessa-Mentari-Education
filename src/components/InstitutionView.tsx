@@ -258,7 +258,7 @@ export const InstitutionView: React.FC<InstitutionViewProps> = ({
   };
 
   const handleConsultWhatsApp = (packageName?: string) => {
-    const targetPhone = (settings.nomorWA || '6281234567890').replace(/[^0-9]/g, '');
+    const targetPhone = (settings.nomorWA || '6287879069404').replace(/[^0-9]/g, '');
     const pkgText = packageName ? `tentang *${packageName}*` : 'mengenai program les privat Dessa Mentari Education';
     const text = encodeURIComponent(
       `Halo Admin Dessa Mentari Education,\n\nSaya ingin berkonsultasi ${pkgText} untuk putra/putri saya.\nBisa mohon info jadwal tutor yang tersedia dan biaya lesnya?\n\nTerima kasih!`
@@ -803,7 +803,7 @@ export const InstitutionView: React.FC<InstitutionViewProps> = ({
 
               <button
                 onClick={() => {
-                  const phone = (settings.nomorWA || '6281234567890').replace(/[^0-9]/g, '');
+                  const phone = (settings.nomorWA || '6287879069404').replace(/[^0-9]/g, '');
                   const text = encodeURIComponent(
                     `Halo Admin Dessa Mentari Education,\n\nSaya ingin mendaftar bimbingan les privat dengan simulasi berikut:\n- Jenjang: ${calcLevel}\n- Frekuensi: ${calcSessionsPerWeek}x / minggu\n- Durasi: ${calcDuration === '90_menit' ? '90 Menit' : '120 Menit'}\n- Estimasi biaya: Rp ${estimatedMonthlyFee.toLocaleString('id-ID')} / bulan\n\nMohon info ketersediaan tutor dan jadwal.\nTerima kasih!`
                   );
@@ -851,7 +851,7 @@ export const InstitutionView: React.FC<InstitutionViewProps> = ({
               <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
                 <button
                   onClick={() => {
-                    const phone = (settings.nomorWA || '6281234567890').replace(/[^0-9]/g, '');
+                    const phone = (settings.nomorWA || '6287879069404').replace(/[^0-9]/g, '');
                     const text = encodeURIComponent(
                       `Halo Admin Dessa Mentari Education,\n\nSaya telah mengisi formulir pendaftaran online:\n- Nama Siswa: ${regForm.namaSiswa}\n- Jenjang & Kelas: ${regForm.jenjang} (${regForm.kelasGrade})\n- Nama Orang Tua: ${regForm.namaOrangTua}\n- Paket: ${regForm.paketPilihan}\n- Jadwal Diinginkan: ${regForm.hariLes} (${regForm.jamLes})\n\nMohon konfirmasi jadwal tutor ya, terima kasih!`
                     );

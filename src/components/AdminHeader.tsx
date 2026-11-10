@@ -15,15 +15,18 @@ import {
   Lock,
   ArrowLeft,
   Share2,
-  Award
+  Award,
+  UserCheck,
+  FileSpreadsheet
 } from 'lucide-react';
 
-export type AdminTabType = 'create' | 'students' | 'certificates' | 'billing' | 'photos' | 'video' | 'history' | 'settings' | 'guide';
+export type AdminTabType = 'create' | 'teachers' | 'recap' | 'students' | 'certificates' | 'billing' | 'photos' | 'video' | 'history' | 'settings' | 'guide';
 
 interface AdminHeaderProps {
   adminTab: AdminTabType;
   onAdminTabChange: (tab: AdminTabType) => void;
   onExitAdmin: () => void;
+  onGoToTeacherPortal?: () => void;
   onDownloadJpg: () => void;
   downloading: boolean;
   onDownloadPdf?: () => void;
@@ -32,6 +35,7 @@ interface AdminHeaderProps {
   adminLinkCopied?: boolean;
   onOpenInstallModal?: () => void;
   studentsCount?: number;
+  teachersCount?: number;
   certificatesCount?: number;
   photosCount?: number;
   unpaidCount?: number;
@@ -41,6 +45,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
   adminTab,
   onAdminTabChange,
   onExitAdmin,
+  onGoToTeacherPortal,
   onDownloadJpg,
   downloading,
   onDownloadPdf,
@@ -49,12 +54,15 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
   adminLinkCopied = false,
   onOpenInstallModal,
   studentsCount,
+  teachersCount,
   certificatesCount,
   photosCount,
   unpaidCount,
 }) => {
   const tabs: { id: AdminTabType; label: string; icon: React.ReactNode; badge?: number | string }[] = [
-    { id: 'create', label: 'Input Laporan Baru', icon: <FilePlus className="w-4 h-4 text-amber-500" /> },
+    { id: 'create', label: 'Input Laporan Guru', icon: <FilePlus className="w-4 h-4 text-amber-500" /> },
+    { id: 'recap', label: 'Rekapan Orang Tua', icon: <FileSpreadsheet className="w-4 h-4 text-emerald-400" /> },
+    { id: 'teachers', label: 'Registrasi & Data Guru', icon: <UserCheck className="w-4 h-4 text-amber-500" />, badge: teachersCount },
     { id: 'students', label: 'Kelola Siswa', icon: <GraduationCap className="w-4 h-4 text-amber-600" />, badge: studentsCount },
     { id: 'certificates', label: 'Sertifikat Siswa', icon: <Award className="w-4 h-4 text-amber-400" />, badge: certificatesCount },
     { id: 'billing', label: 'Rekapan & Biaya Les', icon: <DollarSign className="w-4 h-4 text-emerald-600" />, badge: unpaidCount && unpaidCount > 0 ? `${unpaidCount} Tagihan` : undefined },
@@ -79,6 +87,17 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
             <ArrowLeft className="w-4 h-4" />
             <span className="hidden sm:inline">Web Depan</span>
           </button>
+
+          {onGoToTeacherPortal && (
+            <button
+              onClick={onGoToTeacherPortal}
+              title="Buka Dasbor Khusus Guru"
+              className="p-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 hover:text-white transition-all flex items-center gap-1.5 text-xs font-bold shrink-0 border border-amber-400/30"
+            >
+              <UserCheck className="w-4 h-4 text-amber-400" />
+              <span className="hidden sm:inline">Dasbor Guru</span>
+            </button>
+          )}
 
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white p-1 shadow-sm flex items-center justify-center shrink-0 border border-amber-400">

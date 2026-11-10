@@ -38,12 +38,17 @@ export interface ReportData {
   id: string;
   namaSiswa: string;
   namaPengajar: string;
+  teacherId?: string;
   tanggal: string; // YYYY-MM-DD
   waktuDurasi: string; // e.g. "90 Menit (15.30 - 17.00)"
   jenjang: EducationLevel;
   kelasGrade?: string; // e.g. "Kelas 4"
   mataPelajaran: SubjectOption | string;
   statusKehadiran: AttendanceStatus;
+  
+  // Session number & qualitative scale
+  sesiKe?: number; // e.g. Sesi 1, 2, 3...
+  pemahamanScale?: 1 | 2 | 3 | 4 | 5; // Scale 1 (Perlu Bimbingan) - 5 (Istimewa)
   
   // Numerical metrics for Chart.js progress visualization
   skorPemahaman?: number; // 0 - 100
@@ -78,6 +83,7 @@ export interface StudentData {
   namaPengajar?: string;
   status: StudentStatus;
   catatanKhusus?: string;
+  fotoSiswa?: string; // URL or base64 photo added by teacher
   createdAt: string;
 }
 
@@ -172,5 +178,41 @@ export interface CertificateData {
   nomorWAOrangTua?: string;
   isVerified?: boolean;
   createdAt: string;
+}
+
+export type TeacherStatus = 'Aktif' | 'Non-Aktif';
+
+export interface TeacherData {
+  id: string;
+  namaLengkap: string;
+  gelar?: string;
+  email: string;
+  nomorWA: string;
+  mataPelajaran: string[];
+  jenjang: EducationLevel[];
+  areaDomisili: string;
+  status: TeacherStatus;
+  username: string;
+  initialPassword?: string;
+  catatanKhusus?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface ParentRecapSummary {
+  studentName: string;
+  studentId?: string;
+  jenjang: EducationLevel;
+  kelasGrade?: string;
+  namaPengajar: string;
+  periodeAwal: string;
+  periodeAkhir: string;
+  totalSesi: number;
+  rataRataPemahaman: number;
+  rataRataKeaktifan: number;
+  tingkatKehadiran: number;
+  laporanList: ReportData[];
+  catatanUmum: string;
+  rekomendasiBelajar: string;
 }
 

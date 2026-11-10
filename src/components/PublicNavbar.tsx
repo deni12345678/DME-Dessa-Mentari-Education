@@ -15,7 +15,8 @@ import {
   MessageCircle,
   ShieldCheck,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  UserCheck
 } from 'lucide-react';
 
 export type PublicTabType = 'home' | 'about' | 'packages' | 'calculator' | 'student-report' | 'register' | 'faq';
@@ -24,6 +25,7 @@ interface PublicNavbarProps {
   activeTab: PublicTabType;
   onTabChange: (tab: PublicTabType) => void;
   onGoToAdmin: () => void;
+  onGoToTeacher?: () => void;
   onOpenInstallModal?: () => void;
   contactPhone?: string;
   registeredStudentsCount?: number;
@@ -33,8 +35,9 @@ export const PublicNavbar: React.FC<PublicNavbarProps> = ({
   activeTab,
   onTabChange,
   onGoToAdmin,
+  onGoToTeacher,
   onOpenInstallModal,
-  contactPhone = '6281234567890',
+  contactPhone = '6287879069404',
   registeredStudentsCount,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -86,12 +89,24 @@ export const PublicNavbar: React.FC<PublicNavbarProps> = ({
               <span>Konsultasi WA: +{contactPhone.replace(/[^0-9]/g, '')}</span>
             </button>
             <span className="text-slate-500">|</span>
+            {onGoToTeacher && (
+              <>
+                <button
+                  onClick={onGoToTeacher}
+                  className="text-amber-300 hover:text-white transition-colors flex items-center gap-1 font-bold"
+                >
+                  <UserCheck className="w-3 h-3 text-amber-400" />
+                  <span>Portal Guru</span>
+                </button>
+                <span className="text-slate-500">|</span>
+              </>
+            )}
             <button
               onClick={onGoToAdmin}
               className="text-amber-300 hover:text-white transition-colors flex items-center gap-1 font-bold underline underline-offset-2"
             >
               <Lock className="w-3 h-3" />
-              <span>Akses Portal Admin & Tutor</span>
+              <span>Akses Admin</span>
             </button>
           </div>
         </div>
@@ -173,17 +188,29 @@ export const PublicNavbar: React.FC<PublicNavbarProps> = ({
             </button>
           )}
 
+          {/* DEDICATED TEACHER PORTAL BUTTON */}
+          {onGoToTeacher && (
+            <button
+              onClick={onGoToTeacher}
+              className="px-3 py-2 sm:px-3.5 sm:py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black rounded-xl text-xs sm:text-xs shadow-sm transition-all flex items-center gap-1.5 border border-amber-600/40 active:scale-95"
+            >
+              <UserCheck className="w-3.5 h-3.5 text-slate-950" />
+              <span className="hidden sm:inline">Portal Guru</span>
+              <span className="sm:hidden">Guru</span>
+              <span className="text-[8.5px] bg-slate-950 text-amber-300 px-1 py-0.2 rounded font-black hidden md:inline">
+                TUTOR
+              </span>
+            </button>
+          )}
+
           {/* DEDICATED ADMIN PORTAL BUTTON */}
           <button
             onClick={onGoToAdmin}
             className="px-3.5 py-2 sm:px-4 sm:py-2.5 bg-gradient-to-r from-slate-900 via-slate-800 to-amber-950 hover:from-black hover:to-amber-900 text-white font-extrabold rounded-xl text-xs sm:text-xs shadow-sm transition-all flex items-center gap-1.5 border border-amber-400/40 active:scale-95 group"
           >
             <Lock className="w-3.5 h-3.5 text-amber-300 group-hover:rotate-12 transition-transform" />
-            <span className="hidden sm:inline">Portal Admin & Tutor</span>
+            <span className="hidden sm:inline">Admin Pusat</span>
             <span className="sm:hidden">Admin</span>
-            <span className="text-[9px] bg-amber-400 text-slate-950 px-1 py-0.2 rounded font-black hidden md:inline">
-              INPUT
-            </span>
           </button>
 
           {/* Mobile Menu Toggle Button */}
@@ -238,6 +265,19 @@ export const PublicNavbar: React.FC<PublicNavbarProps> = ({
           </div>
 
           <div className="pt-2 border-t border-slate-200 flex flex-col gap-2">
+            {onGoToTeacher && (
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  onGoToTeacher();
+                }}
+                className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black rounded-xl text-xs flex items-center justify-center gap-2 shadow-2xs"
+              >
+                <UserCheck className="w-4 h-4 text-slate-950" />
+                <span>Masuk ke Portal Guru (Dasbor Pengajar)</span>
+              </button>
+            )}
+
             <button
               onClick={() => {
                 setMobileMenuOpen(false);
@@ -246,7 +286,7 @@ export const PublicNavbar: React.FC<PublicNavbarProps> = ({
               className="w-full py-2.5 bg-slate-900 text-amber-300 hover:bg-black rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 border border-amber-400/30"
             >
               <Lock className="w-4 h-4 text-amber-400" />
-              <span>Masuk ke Fitur Admin (Input Laporan & Siswa)</span>
+              <span>Masuk ke Admin Pusat (Laporan & Siswa)</span>
             </button>
 
             {onOpenInstallModal && (

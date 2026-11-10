@@ -59,6 +59,15 @@ service cloud.firestore {
       data.createdAt is string;
     }
 
+    function isValidTeacher(data) {
+      return data.keys().hasAll(['namaLengkap', 'email', 'nomorWA', 'status', 'createdAt']) &&
+      data.namaLengkap is string && data.namaLengkap.size() > 0 && data.namaLengkap.size() <= 100 &&
+      data.email is string && data.email.size() <= 100 &&
+      data.nomorWA is string && data.nomorWA.size() <= 50 &&
+      data.status is string &&
+      data.createdAt is string;
+    }
+
     match /reports/{reportId} {
       allow read: if true;
       allow create, update: if isValidReport(request.resource.data);
@@ -68,6 +77,12 @@ service cloud.firestore {
     match /students/{studentId} {
       allow read: if true;
       allow create, update: if isValidStudent(request.resource.data);
+      allow delete: if true;
+    }
+
+    match /teachers/{teacherId} {
+      allow read: if true;
+      allow create, update: if isValidTeacher(request.resource.data);
       allow delete: if true;
     }
 

@@ -72,7 +72,7 @@ export const CertificateManagerView: React.FC<CertificateManagerViewProps> = ({
       namaTutorPengampu: 'Sarah Syahidah Syahrudin, S.Pd',
       jabatanTutor: 'Instruktur Pengampu',
       theme: 'gold',
-      nomorWAOrangTua: '081234567890',
+      nomorWAOrangTua: '087879069404',
       isVerified: true,
       createdAt: new Date().toISOString(),
     };

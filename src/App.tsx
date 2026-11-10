@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { ReportData, TeacherSettings, StudentData, PhotoItem, BillingRecord, CertificateData } from './types/report';
+import React, { useState, useEffect, useMemo } from 'react';
+import { ReportData, TeacherSettings, StudentData, PhotoItem, BillingRecord, CertificateData, TeacherData } from './types/report';
 import { Header, ActiveTabType } from './components/Header';
 import { PublicNavbar, PublicTabType } from './components/PublicNavbar';
 import { PublicHomeView } from './components/PublicHomeView';
@@ -18,6 +18,11 @@ import { StudentManagementView } from './components/StudentManagementView';
 import { PhotoGalleryView } from './components/PhotoGalleryView';
 import { BillingSummaryView } from './components/BillingSummaryView';
 import { CertificateManagerView } from './components/CertificateManagerView';
+import { TeacherManagementView } from './components/TeacherManagementView';
+import { TeacherReportSubmissionView } from './components/TeacherReportSubmissionView';
+import { AdminReportRecapView } from './components/AdminReportRecapView';
+import { TeacherDashboardView } from './components/TeacherDashboardView';
+import { TeacherLoginModal } from './components/TeacherLoginModal';
 import { PWAInstallModal } from './components/PWAInstallModal';
 import { InstitutionView } from './components/InstitutionView';
 import { 
@@ -45,7 +50,10 @@ import {
   subscribeBillingsFromCloud,
   saveCertificateToCloud,
   deleteCertificateFromCloud,
-  subscribeCertificatesFromCloud
+  subscribeCertificatesFromCloud,
+  saveTeacherToCloud,
+  deleteTeacherFromCloud,
+  subscribeTeachersFromCloud
 } from './lib/firebase';
 import { 
   Download, 
@@ -71,7 +79,7 @@ import {
 
 const DEFAULT_SETTINGS: TeacherSettings = {
   namaPengajar: 'Deni Santoso, M.M',
-  nomorWA: '',
+  nomorWA: '6287879069404',
   defaultTheme: 'solar',
   defaultLayout: 'elegant',
   lembagaName: 'Dessa Mentari Education',
@@ -80,8 +88,341 @@ const DEFAULT_SETTINGS: TeacherSettings = {
 };
 
 const SEED_REPORTS: ReportData[] = [
+  // JUNI 2026
   {
-    id: 'RPT-101',
+    id: 'RPT-0601',
+    namaSiswa: 'Ananda Kevin Pratama',
+    namaPengajar: 'Deni Santoso, M.M',
+    tanggal: '2026-06-12',
+    waktuDurasi: '90 Menit',
+    jenjang: 'SD',
+    kelasGrade: 'Kelas 4 SD',
+    mataPelajaran: 'Matematika',
+    statusKehadiran: 'Hadir',
+    skorPemahaman: 76,
+    skorKeaktifan: 80,
+    skorFokus: 75,
+    materiDipelajari: 'Pengenalan Operasi Bilangan Bulat & Garis Bilangan.',
+    evaluasiSiswa: 'Mulai memahami konsep nilai tempat dan bilangan negatif secara perlahan.',
+    theme: 'solar',
+    createdAt: '2026-06-12T10:00:00.000Z',
+  },
+  {
+    id: 'RPT-0602',
+    namaSiswa: 'Siti Aisyah',
+    namaPengajar: 'Deni Santoso, M.M',
+    tanggal: '2026-06-20',
+    waktuDurasi: '90 Menit',
+    jenjang: 'SMP',
+    kelasGrade: 'Kelas 8 SMP',
+    mataPelajaran: 'IPA',
+    statusKehadiran: 'Hadir',
+    skorPemahaman: 82,
+    skorKeaktifan: 85,
+    skorFokus: 88,
+    materiDipelajari: 'Pengenalan Klasifikasi Makhluk Hidup & Mikroskop.',
+    evaluasiSiswa: 'Aisyah sangat teliti dalam mengamati diagram sel hewan dan tumbuhan.',
+    theme: 'emerald',
+    createdAt: '2026-06-20T10:00:00.000Z',
+  },
+  {
+    id: 'RPT-0603',
+    namaSiswa: 'Bimo Utomo',
+    namaPengajar: 'Deni Santoso, M.M',
+    tanggal: '2026-06-26',
+    waktuDurasi: '90 Menit',
+    jenjang: 'SMA',
+    kelasGrade: 'Kelas 11 SMA',
+    mataPelajaran: 'Kimia',
+    statusKehadiran: 'Hadir',
+    skorPemahaman: 80,
+    skorKeaktifan: 82,
+    skorFokus: 80,
+    materiDipelajari: 'Teori Struktur Atom & Konfigurasi Elektron Bohr.',
+    evaluasiSiswa: 'Konsep kulit atom dapat diselesaikan dengan baik, latihan nomor atom tuntas.',
+    theme: 'navy',
+    createdAt: '2026-06-26T10:00:00.000Z',
+  },
+
+  // JULI 2026
+  {
+    id: 'RPT-0701',
+    namaSiswa: 'Ananda Kevin Pratama',
+    namaPengajar: 'Sarah Syahidah Syahrudin, S.Pd',
+    tanggal: '2026-07-08',
+    waktuDurasi: '90 Menit',
+    jenjang: 'SD',
+    kelasGrade: 'Kelas 4 SD',
+    mataPelajaran: 'Matematika',
+    statusKehadiran: 'Hadir',
+    skorPemahaman: 80,
+    skorKeaktifan: 84,
+    skorFokus: 82,
+    materiDipelajari: 'Pecahan Senilai & Penyederhanaan Pecahan.',
+    evaluasiSiswa: 'Mulai terbiasa membagi pembilang dan penyebut dengan FPB.',
+    theme: 'solar',
+    createdAt: '2026-07-08T10:00:00.000Z',
+  },
+  {
+    id: 'RPT-0702',
+    namaSiswa: 'Siti Aisyah',
+    namaPengajar: 'Deni Santoso, M.M',
+    tanggal: '2026-07-15',
+    waktuDurasi: '90 Menit',
+    jenjang: 'SMP',
+    kelasGrade: 'Kelas 8 SMP',
+    mataPelajaran: 'IPA',
+    statusKehadiran: 'Hadir',
+    skorPemahaman: 86,
+    skorKeaktifan: 88,
+    skorFokus: 90,
+    materiDipelajari: 'Sistem Rangka & Persendian pada Manusia.',
+    evaluasiSiswa: 'Dapat membedakan sendi engsel, peluru, dan putar dengan tepat.',
+    theme: 'emerald',
+    createdAt: '2026-07-15T10:00:00.000Z',
+  },
+  {
+    id: 'RPT-0703',
+    namaSiswa: 'Clarissa Puteri',
+    namaPengajar: 'Sarah Syahidah Syahrudin, S.Pd',
+    tanggal: '2026-07-22',
+    waktuDurasi: '75 Menit',
+    jenjang: 'TK',
+    kelasGrade: 'TK B',
+    mataPelajaran: 'Calistung / Cisritung',
+    statusKehadiran: 'Hadir',
+    skorPemahaman: 85,
+    skorKeaktifan: 90,
+    skorFokus: 80,
+    materiDipelajari: 'Mengenal Huruf Vokal A-I-U-E-O & Menulis Angka 1-10.',
+    evaluasiSiswa: 'Caca ceria dan senang mewarnai kartu huruf.',
+    theme: 'pastel',
+    createdAt: '2026-07-22T10:00:00.000Z',
+  },
+  {
+    id: 'RPT-0704',
+    namaSiswa: 'Bimo Utomo',
+    namaPengajar: 'Deni Santoso, M.M',
+    tanggal: '2026-07-29',
+    waktuDurasi: '90 Menit',
+    jenjang: 'SMA',
+    kelasGrade: 'Kelas 11 SMA',
+    mataPelajaran: 'Kimia',
+    statusKehadiran: 'Hadir',
+    skorPemahaman: 84,
+    skorKeaktifan: 85,
+    skorFokus: 86,
+    materiDipelajari: 'Sistem Periodik Unsur & Jari-jari Atom.',
+    evaluasiSiswa: 'Mampu menjelaskan tren keelektronegatifan satu periode.',
+    theme: 'navy',
+    createdAt: '2026-07-29T10:00:00.000Z',
+  },
+
+  // AGUSTUS 2026
+  {
+    id: 'RPT-0801',
+    namaSiswa: 'Ananda Kevin Pratama',
+    namaPengajar: 'Sarah Syahidah Syahrudin, S.Pd',
+    tanggal: '2026-08-04',
+    waktuDurasi: '90 Menit',
+    jenjang: 'SD',
+    kelasGrade: 'Kelas 4 SD',
+    mataPelajaran: 'Matematika',
+    statusKehadiran: 'Hadir',
+    skorPemahaman: 82,
+    skorKeaktifan: 88,
+    skorFokus: 85,
+    materiDipelajari: 'Operasi Penjumlahan & Pengurangan Pecahan Biasa.',
+    evaluasiSiswa: 'Ketelitian menghitung KPK penyebut semakin mantap.',
+    theme: 'solar',
+    createdAt: '2026-08-04T10:00:00.000Z',
+  },
+  {
+    id: 'RPT-0802',
+    namaSiswa: 'Siti Aisyah',
+    namaPengajar: 'Deni Santoso, M.M',
+    tanggal: '2026-08-11',
+    waktuDurasi: '90 Menit',
+    jenjang: 'SMP',
+    kelasGrade: 'Kelas 8 SMP',
+    mataPelajaran: 'IPA',
+    statusKehadiran: 'Hadir',
+    skorPemahaman: 88,
+    skorKeaktifan: 90,
+    skorFokus: 92,
+    materiDipelajari: 'Gerak Lurus Beraturan (GLB) & Hukum Newton I-II.',
+    evaluasiSiswa: 'Mampu mengaplikasikan rumus F = m.a pada soal gerak.',
+    theme: 'emerald',
+    createdAt: '2026-08-11T10:00:00.000Z',
+  },
+  {
+    id: 'RPT-0803',
+    namaSiswa: 'Clarissa Puteri',
+    namaPengajar: 'Sarah Syahidah Syahrudin, S.Pd',
+    tanggal: '2026-08-18',
+    waktuDurasi: '75 Menit',
+    jenjang: 'TK',
+    kelasGrade: 'TK B',
+    mataPelajaran: 'Calistung / Cisritung',
+    statusKehadiran: 'Hadir',
+    skorPemahaman: 88,
+    skorKeaktifan: 92,
+    skorFokus: 85,
+    materiDipelajari: 'Membaca 2 Suku Kata Terbuka (ba, bi, bu, be, bo).',
+    evaluasiSiswa: 'Lafal membaca sangat jelas, antusias menyusun balok kata.',
+    theme: 'pastel',
+    createdAt: '2026-08-18T10:00:00.000Z',
+  },
+  {
+    id: 'RPT-0804',
+    namaSiswa: 'Bimo Utomo',
+    namaPengajar: 'Deni Santoso, M.M',
+    tanggal: '2026-08-23',
+    waktuDurasi: '90 Menit',
+    jenjang: 'SMA',
+    kelasGrade: 'Kelas 11 SMA',
+    mataPelajaran: 'Matematika',
+    statusKehadiran: 'Hadir',
+    skorPemahaman: 86,
+    skorKeaktifan: 88,
+    skorFokus: 88,
+    materiDipelajari: 'Persamaan Trigonometri Dasar & Sudut Berelasi.',
+    evaluasiSiswa: 'Mampu menemukan himpunan penyelesaian sudut kuadran I-IV.',
+    theme: 'navy',
+    createdAt: '2026-08-23T10:00:00.000Z',
+  },
+  {
+    id: 'RPT-0805',
+    namaSiswa: 'Ananda Kevin Pratama',
+    namaPengajar: 'Sarah Syahidah Syahrudin, S.Pd',
+    tanggal: '2026-08-28',
+    waktuDurasi: '90 Menit',
+    jenjang: 'SD',
+    kelasGrade: 'Kelas 4 SD',
+    mataPelajaran: 'Bahasa Inggris',
+    statusKehadiran: 'Hadir',
+    skorPemahaman: 85,
+    skorKeaktifan: 90,
+    skorFokus: 86,
+    materiDipelajari: 'Greetings, Family Members & Simple Introductions.',
+    evaluasiSiswa: 'Percaya diri memperkenalkan anggota keluarga dalam Bahasa Inggris.',
+    theme: 'solar',
+    createdAt: '2026-08-28T10:00:00.000Z',
+  },
+
+  // SEPTEMBER 2026
+  {
+    id: 'RPT-0901',
+    namaSiswa: 'Ananda Kevin Pratama',
+    namaPengajar: 'Deni Santoso, M.M',
+    tanggal: '2026-09-03',
+    waktuDurasi: '90 Menit',
+    jenjang: 'SD',
+    kelasGrade: 'Kelas 4 SD',
+    mataPelajaran: 'Matematika',
+    statusKehadiran: 'Hadir',
+    skorPemahaman: 86,
+    skorKeaktifan: 90,
+    skorFokus: 88,
+    materiDipelajari: 'Perkalian Pecahan & Konversi Pecahan ke Desimal.',
+    evaluasiSiswa: 'Kevin sudah mampu mengubah penyebut kelipatan 10 menjadi desimal.',
+    theme: 'solar',
+    createdAt: '2026-09-03T10:00:00.000Z',
+  },
+  {
+    id: 'RPT-0902',
+    namaSiswa: 'Siti Aisyah',
+    namaPengajar: 'Deni Santoso, M.M',
+    tanggal: '2026-09-10',
+    waktuDurasi: '90 Menit',
+    jenjang: 'SMP',
+    kelasGrade: 'Kelas 8 SMP',
+    mataPelajaran: 'IPA',
+    statusKehadiran: 'Hadir',
+    skorPemahaman: 90,
+    skorKeaktifan: 92,
+    skorFokus: 92,
+    materiDipelajari: 'Usaha & Pesawat Sederhana (Tuas, Katrol, Bidang Miring).',
+    evaluasiSiswa: 'Perhitungan keuntungan mekanis tuas sangat cepat dan tepat.',
+    theme: 'emerald',
+    createdAt: '2026-09-10T10:00:00.000Z',
+  },
+  {
+    id: 'RPT-0903',
+    namaSiswa: 'Clarissa Puteri',
+    namaPengajar: 'Sarah Syahidah Syahrudin, S.Pd',
+    tanggal: '2026-09-14',
+    waktuDurasi: '75 Menit',
+    jenjang: 'TK',
+    kelasGrade: 'TK B',
+    mataPelajaran: 'Calistung / Cisritung',
+    statusKehadiran: 'Hadir',
+    skorPemahaman: 90,
+    skorKeaktifan: 94,
+    skorFokus: 88,
+    materiDipelajari: 'Penjumlahan Bergambar 1-10 & Menulis Kata Sederhana.',
+    evaluasiSiswa: 'Caca sudah bisa menghitung jumlah apel bergambar tanpa bantuan jari.',
+    theme: 'pastel',
+    createdAt: '2026-09-14T10:00:00.000Z',
+  },
+  {
+    id: 'RPT-0904',
+    namaSiswa: 'Bimo Utomo',
+    namaPengajar: 'Deni Santoso, M.M',
+    tanggal: '2026-09-19',
+    waktuDurasi: '90 Menit',
+    jenjang: 'SMA',
+    kelasGrade: 'Kelas 11 SMA',
+    mataPelajaran: 'Kimia',
+    statusKehadiran: 'Hadir',
+    skorPemahaman: 88,
+    skorKeaktifan: 90,
+    skorFokus: 90,
+    materiDipelajari: 'Ikatan Kovalen Polar & Non-Polar serta Ikatan Logam.',
+    evaluasiSiswa: 'Pemahaman bentuk geometri molekul VSEPR sangat tajam.',
+    theme: 'navy',
+    createdAt: '2026-09-19T10:00:00.000Z',
+  },
+  {
+    id: 'RPT-0905',
+    namaSiswa: 'Ananda Kevin Pratama',
+    namaPengajar: 'Sarah Syahidah Syahrudin, S.Pd',
+    tanggal: '2026-09-24',
+    waktuDurasi: '90 Menit',
+    jenjang: 'SD',
+    kelasGrade: 'Kelas 4 SD',
+    mataPelajaran: 'Bahasa Inggris',
+    statusKehadiran: 'Hadir',
+    skorPemahaman: 88,
+    skorKeaktifan: 92,
+    skorFokus: 90,
+    materiDipelajari: 'Telling Time (O’clock, Half Past, Quarter To) & Daily Routines.',
+    evaluasiSiswa: 'Sangat fasih menyebutkan jam aktivitas sekolah dan bangun tidur.',
+    theme: 'solar',
+    createdAt: '2026-09-24T10:00:00.000Z',
+  },
+  {
+    id: 'RPT-0906',
+    namaSiswa: 'Siti Aisyah',
+    namaPengajar: 'Deni Santoso, M.M',
+    tanggal: '2026-09-28',
+    waktuDurasi: '90 Menit',
+    jenjang: 'SMP',
+    kelasGrade: 'Kelas 8 SMP',
+    mataPelajaran: 'IPA',
+    statusKehadiran: 'Hadir',
+    skorPemahaman: 92,
+    skorKeaktifan: 90,
+    skorFokus: 94,
+    materiDipelajari: 'Struktur Jaringan Tumbuhan: Xilem, Floem, Stomata.',
+    evaluasiSiswa: 'Aisyah mampu menggambarkan penampang melintang akar dan batang dikotil.',
+    theme: 'emerald',
+    createdAt: '2026-09-28T10:00:00.000Z',
+  },
+
+  // OKTOBER 2026
+  {
+    id: 'RPT-1001',
     namaSiswa: 'Ananda Kevin Pratama',
     namaPengajar: 'Deni Santoso, M.M',
     tanggal: '2026-10-10',
@@ -90,17 +431,16 @@ const SEED_REPORTS: ReportData[] = [
     kelasGrade: 'Kelas 4 SD',
     mataPelajaran: 'Matematika',
     statusKehadiran: 'Hadir',
-    skorPemahaman: 75,
-    skorKeaktifan: 80,
-    skorFokus: 70,
-    materiDipelajari: 'Pengenalan Pecahan Biasa & Pecahan Senilai.',
-    evaluasiSiswa: 'Kevin mengikuti sesi les dengan cukup baik. Perlu pengulangan konsep dasar penyebut pecahan.',
-    tugasRumah: 'Halaman 15 No 1-5',
+    skorPemahaman: 88,
+    skorKeaktifan: 90,
+    skorFokus: 86,
+    materiDipelajari: 'Pengenalan Pecahan Campuran & Operasi Hitung Campuran.',
+    evaluasiSiswa: 'Kevin mengikuti sesi les dengan sangat baik. Pengulangan konsep penyebut membuahkan hasil.',
     theme: 'solar',
     createdAt: '2026-10-10T10:00:00.000Z',
   },
   {
-    id: 'RPT-102',
+    id: 'RPT-1002',
     namaSiswa: 'Ananda Kevin Pratama',
     namaPengajar: 'Sarah Syahidah Syahrudin, S.Pd',
     tanggal: '2026-10-15',
@@ -109,35 +449,16 @@ const SEED_REPORTS: ReportData[] = [
     kelasGrade: 'Kelas 4 SD',
     mataPelajaran: 'Matematika',
     statusKehadiran: 'Hadir',
-    skorPemahaman: 85,
-    skorKeaktifan: 90,
-    skorFokus: 85,
-    materiDipelajari: 'Perkalian Desimal & Pecahan Campuran.',
-    evaluasiSiswa: 'Peningkatan pesat! Kevin mampu mengerjakan 7 dari 10 latihan soal cerita dengan mandiri.',
-    tugasRumah: 'Halaman 22 No 1-4',
+    skorPemahaman: 90,
+    skorKeaktifan: 92,
+    skorFokus: 90,
+    materiDipelajari: 'Perkalian Desimal & Pecahan Campuran Lanjutan.',
+    evaluasiSiswa: 'Peningkatan pesat! Kevin mampu mengerjakan 8 dari 10 latihan soal cerita secara mandiri.',
     theme: 'solar',
     createdAt: '2026-10-15T10:00:00.000Z',
   },
   {
-    id: 'RPT-103',
-    namaSiswa: 'Ananda Kevin Pratama',
-    namaPengajar: 'Sarah Syahidah Syahrudin, S.Pd',
-    tanggal: '2026-10-22',
-    waktuDurasi: '90 Menit',
-    jenjang: 'SD',
-    kelasGrade: 'Kelas 4 SD',
-    mataPelajaran: 'Bahasa Inggris',
-    statusKehadiran: 'Hadir',
-    skorPemahaman: 90,
-    skorKeaktifan: 95,
-    skorFokus: 90,
-    materiDipelajari: 'Vocabulary Unit 4: Daily Activities & Present Tense.',
-    evaluasiSiswa: 'Sangat percaya diri dalam mengucapkan kalimat Bahasa Inggris. Hafalan kosa kata meningkat pesat.',
-    theme: 'solar',
-    createdAt: '2026-10-22T10:00:00.000Z',
-  },
-  {
-    id: 'RPT-104',
+    id: 'RPT-1003',
     namaSiswa: 'Siti Aisyah',
     namaPengajar: 'Deni Santoso, M.M',
     tanggal: '2026-10-18',
@@ -146,13 +467,159 @@ const SEED_REPORTS: ReportData[] = [
     kelasGrade: 'Kelas 8 SMP',
     mataPelajaran: 'IPA',
     statusKehadiran: 'Hadir',
-    skorPemahaman: 92,
-    skorKeaktifan: 88,
-    skorFokus: 95,
+    skorPemahaman: 94,
+    skorKeaktifan: 90,
+    skorFokus: 96,
     materiDipelajari: 'Sistem Pencernaan Manusia & Uji Nutrisi Makanan.',
-    evaluasiSiswa: 'Aisyah sangat fokus dan teliti dalam memahami organ pencernaan serta enzim pencernaan.',
+    evaluasiSiswa: 'Aisyah sangat fokus dan teliti dalam memahami enzim pencernaan lambung dan usus halus.',
     theme: 'emerald',
     createdAt: '2026-10-18T10:00:00.000Z',
+  },
+  {
+    id: 'RPT-1004',
+    namaSiswa: 'Ananda Kevin Pratama',
+    namaPengajar: 'Sarah Syahidah Syahrudin, S.Pd',
+    tanggal: '2026-10-22',
+    waktuDurasi: '90 Menit',
+    jenjang: 'SD',
+    kelasGrade: 'Kelas 4 SD',
+    mataPelajaran: 'Bahasa Inggris',
+    statusKehadiran: 'Hadir',
+    skorPemahaman: 92,
+    skorKeaktifan: 95,
+    skorFokus: 92,
+    materiDipelajari: 'Vocabulary Unit 4: Daily Activities & Simple Present Tense.',
+    evaluasiSiswa: 'Sangat percaya diri dalam melafalkan kalimat Bahasa Inggris, pronoun he/she/it tuntas.',
+    theme: 'solar',
+    createdAt: '2026-10-22T10:00:00.000Z',
+  },
+  {
+    id: 'RPT-1005',
+    namaSiswa: 'Bimo Utomo',
+    namaPengajar: 'Deni Santoso, M.M',
+    tanggal: '2026-10-25',
+    waktuDurasi: '90 Menit',
+    jenjang: 'SMA',
+    kelasGrade: 'Kelas 11 SMA',
+    mataPelajaran: 'Matematika',
+    statusKehadiran: 'Hadir',
+    skorPemahaman: 90,
+    skorKeaktifan: 92,
+    skorFokus: 92,
+    materiDipelajari: 'Limit Fungsi Aljabar & Pemfaktoran Bentuk Akar.',
+    evaluasiSiswa: 'Teknik merasionalkan penyebut akar dikuasai dengan sangat lancar.',
+    theme: 'navy',
+    createdAt: '2026-10-25T10:00:00.000Z',
+  },
+  {
+    id: 'RPT-1006',
+    namaSiswa: 'Clarissa Puteri',
+    namaPengajar: 'Sarah Syahidah Syahrudin, S.Pd',
+    tanggal: '2026-10-29',
+    waktuDurasi: '75 Menit',
+    jenjang: 'TK',
+    kelasGrade: 'TK B',
+    mataPelajaran: 'Calistung / Cisritung',
+    statusKehadiran: 'Hadir',
+    skorPemahaman: 94,
+    skorKeaktifan: 96,
+    skorFokus: 90,
+    materiDipelajari: 'Membaca Kalimat Pendek 3 Kata & Pengurangan Dasar 1-10.',
+    evaluasiSiswa: 'Mampu membaca "Ibu beli bolu" dengan lancar tanpa mengeja satu per satu.',
+    theme: 'pastel',
+    createdAt: '2026-10-29T10:00:00.000Z',
+  },
+
+  // NOVEMBER 2026
+  {
+    id: 'RPT-1101',
+    namaSiswa: 'Ananda Kevin Pratama',
+    namaPengajar: 'Deni Santoso, M.M',
+    tanggal: '2026-11-02',
+    waktuDurasi: '90 Menit',
+    jenjang: 'SD',
+    kelasGrade: 'Kelas 4 SD',
+    mataPelajaran: 'Matematika',
+    statusKehadiran: 'Hadir',
+    skorPemahaman: 92,
+    skorKeaktifan: 95,
+    skorFokus: 92,
+    materiDipelajari: 'Geometri Bangun Datar: Keliling & Luas Persegi serta Persegi Panjang.',
+    evaluasiSiswa: 'Menemukan rumus keliling secara induktif dan menyelesaikan 5 soal variasi.',
+    theme: 'solar',
+    createdAt: '2026-11-02T10:00:00.000Z',
+  },
+  {
+    id: 'RPT-1102',
+    namaSiswa: 'Siti Aisyah',
+    namaPengajar: 'Deni Santoso, M.M',
+    tanggal: '2026-11-04',
+    waktuDurasi: '90 Menit',
+    jenjang: 'SMP',
+    kelasGrade: 'Kelas 8 SMP',
+    mataPelajaran: 'IPA',
+    statusKehadiran: 'Hadir',
+    skorPemahaman: 95,
+    skorKeaktifan: 92,
+    skorFokus: 96,
+    materiDipelajari: 'Sistem Peredaran Darah Manusia: Jantung, Pembuluh, & Golongan Darah.',
+    evaluasiSiswa: 'Aisyah menguasai sirkulasi peredaran darah besar dan kecil dengan sempurna.',
+    theme: 'emerald',
+    createdAt: '2026-11-04T10:00:00.000Z',
+  },
+  {
+    id: 'RPT-1103',
+    namaSiswa: 'Clarissa Puteri',
+    namaPengajar: 'Sarah Syahidah Syahrudin, S.Pd',
+    tanggal: '2026-11-05',
+    waktuDurasi: '75 Menit',
+    jenjang: 'TK',
+    kelasGrade: 'TK B',
+    mataPelajaran: 'Calistung / Cisritung',
+    statusKehadiran: 'Hadir',
+    skorPemahaman: 95,
+    skorKeaktifan: 98,
+    skorFokus: 92,
+    materiDipelajari: 'Membaca Cerita Bergambar & Menghitung Belanja Mainan Sederhana.',
+    evaluasiSiswa: 'Sangat mandiri dan percaya diri menjawab tebak kata bergambar.',
+    theme: 'pastel',
+    createdAt: '2026-11-05T10:00:00.000Z',
+  },
+  {
+    id: 'RPT-1104',
+    namaSiswa: 'Bimo Utomo',
+    namaPengajar: 'Deni Santoso, M.M',
+    tanggal: '2026-11-06',
+    waktuDurasi: '90 Menit',
+    jenjang: 'SMA',
+    kelasGrade: 'Kelas 11 SMA',
+    mataPelajaran: 'Kimia',
+    statusKehadiran: 'Hadir',
+    skorPemahaman: 92,
+    skorKeaktifan: 94,
+    skorFokus: 94,
+    materiDipelajari: 'Termokimia: Entalpi Reaksi & Hukum Hess.',
+    evaluasiSiswa: 'Diagram tingkat energi dan diagram siklus Hess dikerjakan dengan cermat.',
+    theme: 'navy',
+    createdAt: '2026-11-06T10:00:00.000Z',
+  },
+  {
+    id: 'RPT-1105',
+    namaSiswa: 'Ananda Kevin Pratama',
+    namaPengajar: 'Sarah Syahidah Syahrudin, S.Pd',
+    tanggal: '2026-11-07',
+    waktuDurasi: '90 Menit',
+    jenjang: 'SD',
+    kelasGrade: 'Kelas 4 SD',
+    mataPelajaran: 'Bahasa Inggris',
+    statusKehadiran: 'Hadir',
+    skorPemahaman: 94,
+    skorKeaktifan: 96,
+    skorFokus: 94,
+    materiDipelajari: 'Comparative & Superlative Adjectives (bigger, taller, the best).',
+    evaluasiSiswa: 'Membandingkan benda di ruangan les dengan aturan imbuhan -er dan -est.',
+    theme: 'solar',
+    createdAt: '2026-11-07T10:00:00.000Z',
   },
 ];
 
@@ -165,7 +632,7 @@ const SEED_STUDENTS: StudentData[] = [
     kelasGrade: 'Kelas 4 SD',
     sekolah: 'SDN Mentari 01',
     namaOrangTua: 'Ibu Ratna',
-    nomorOrangTua: '081234567890',
+    nomorOrangTua: '087879069404',
     alamat: 'Jl. Mentari Raya No. 12',
     mataPelajaran: 'Matematika & Bahasa Inggris',
     hariLes: 'Senin & Kamis',
@@ -252,7 +719,7 @@ const SEED_CERTIFICATES: CertificateData[] = [
     namaTutorPengampu: 'Sarah Syahidah Syahrudin, S.Pd',
     jabatanTutor: 'Instruktur Pengampu',
     theme: 'gold',
-    nomorWAOrangTua: '081234567890',
+    nomorWAOrangTua: '087879069404',
     isVerified: true,
     createdAt: '2026-10-28T09:00:00.000Z',
   },
@@ -282,16 +749,93 @@ const SEED_CERTIFICATES: CertificateData[] = [
   }
 ];
 
+const SEED_TEACHERS: TeacherData[] = [
+  {
+    id: 'TCH-001',
+    namaLengkap: 'Deni Santoso',
+    gelar: 'M.M',
+    email: 'deni.santoso@dessamentari.id',
+    nomorWA: '6287879069404',
+    mataPelajaran: ['Matematika', 'IPA', 'Fisika', 'Kimia'],
+    jenjang: ['SD', 'SMP', 'SMA'],
+    areaDomisili: 'Jakarta Selatan & Depok (Online & Datang ke Rumah)',
+    status: 'Aktif',
+    username: 'deni.santoso',
+    initialPassword: 'DME-Deni#2026',
+    catatanKhusus: 'Direktur Lembaga & Instruktur Senior Eksakta',
+    createdAt: '2026-06-01T08:00:00.000Z',
+  },
+  {
+    id: 'TCH-002',
+    namaLengkap: 'Sarah Syahidah Syahrudin',
+    gelar: 'S.Pd',
+    email: 'sarah.syahidah@dessamentari.id',
+    nomorWA: '6287879069404',
+    mataPelajaran: ['Bahasa Inggris', 'Matematika', 'Calistung / Cisritung', 'IPAS (Ilmu Pengetahuan Alam & Sosial)'],
+    jenjang: ['TK', 'SD', 'SMP'],
+    areaDomisili: 'Tangerang Selatan, BSD & Bintaro',
+    status: 'Aktif',
+    username: 'sarah.syahidah',
+    initialPassword: 'DME-Sarah#2026',
+    catatanKhusus: 'Spesialis Pendampingan Siswa SD, Calistung Ceria & English for Kids',
+    createdAt: '2026-06-02T08:00:00.000Z',
+  },
+  {
+    id: 'TCH-003',
+    namaLengkap: 'Rizky Ramadhan',
+    gelar: 'S.Si',
+    email: 'rizky.ramadhan@dessamentari.id',
+    nomorWA: '6285711223344',
+    mataPelajaran: ['IPA', 'Fisika', 'Biologi', 'Kimia'],
+    jenjang: ['SMP', 'SMA'],
+    areaDomisili: 'Jakarta Timur & Bekasi',
+    status: 'Aktif',
+    username: 'rizky.ramadhan',
+    initialPassword: 'DME-Rizky#2026',
+    catatanKhusus: 'Tutor Olimpiade Sains & Persiapan Ujian Sekolah',
+    createdAt: '2026-07-01T08:00:00.000Z',
+  },
+  {
+    id: 'TCH-004',
+    namaLengkap: 'Nadia Maharani',
+    gelar: 'S.Hum',
+    email: 'nadia.maharani@dessamentari.id',
+    nomorWA: '6281987654321',
+    mataPelajaran: ['Bahasa Jepang', 'Bahasa Inggris', 'Bahasa Indonesia'],
+    jenjang: ['SD', 'SMP', 'SMA'],
+    areaDomisili: 'Jakarta Barat & Online',
+    status: 'Aktif',
+    username: 'nadia.maharani',
+    initialPassword: 'DME-Nadia#2026',
+    catatanKhusus: 'Pengajar Bahasa Asing & Persiapan Sertifikasi JLPT N5-N4',
+    createdAt: '2026-08-15T08:00:00.000Z',
+  },
+];
+
 export default function App() {
-  const [viewMode, setViewMode] = useState<'public' | 'admin'>(() => {
+  const [viewMode, setViewMode] = useState<'public' | 'admin' | 'teacher'>(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       if (params.get('mode') === 'admin' || params.get('reportId')) return 'admin';
+      if (params.get('mode') === 'teacher') return 'teacher';
       const stored = localStorage.getItem('dme_view_mode');
-      if (stored === 'admin') return 'admin';
+      if (stored === 'admin' || stored === 'teacher') return stored as 'public' | 'admin' | 'teacher';
     }
     return 'public';
   });
+
+  const [activeTeacherId, setActiveTeacherId] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const teacherParam = params.get('teacherId');
+      if (teacherParam) return teacherParam;
+      const stored = localStorage.getItem('dme_active_teacher_id');
+      if (stored) return stored;
+    }
+    return 'TCH-002'; // Default initial demo teacher Sarah Syahidah Syahrudin, S.Pd
+  });
+
+  const [isTeacherLoginModalOpen, setIsTeacherLoginModalOpen] = useState(false);
 
   const [publicTab, setPublicTab] = useState<PublicTabType>(() => {
     if (typeof window !== 'undefined') {
@@ -311,7 +855,7 @@ export default function App() {
   const [adminTab, setAdminTab] = useState<AdminTabType>(() => {
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('dme_admin_tab');
-      if (stored && ['create', 'students', 'certificates', 'billing', 'photos', 'video', 'history', 'settings', 'guide'].includes(stored)) {
+      if (stored && ['create', 'teachers', 'recap', 'students', 'certificates', 'billing', 'photos', 'video', 'history', 'settings', 'guide'].includes(stored)) {
         return stored as AdminTabType;
       }
     }
@@ -320,7 +864,18 @@ export default function App() {
 
   const [settings, setSettings] = useState<TeacherSettings>(() => {
     const saved = localStorage.getItem('dme_teacher_settings');
-    return saved ? JSON.parse(saved) : DEFAULT_SETTINGS;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (!parsed.nomorWA || parsed.nomorWA.includes('81234567890')) {
+          parsed.nomorWA = '6287879069404';
+        }
+        return parsed;
+      } catch (e) {
+        // fallback
+      }
+    }
+    return DEFAULT_SETTINGS;
   });
 
   const getTodayDate = () => {
@@ -355,13 +910,40 @@ export default function App() {
 
   const [savedReports, setSavedReports] = useState<ReportData[]>(() => {
     const saved = localStorage.getItem('dme_saved_reports');
-    return saved ? JSON.parse(saved) : SEED_REPORTS;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          // If the cached reports list only has the old <=4 seed items, upgrade to the rich multi-month SEED_REPORTS
+          if (parsed.length <= 4) {
+            return SEED_REPORTS;
+          }
+          // If user added new custom reports, merge with SEED_REPORTS ensuring all seed IDs exist
+          const existingIds = new Set(parsed.map((r: ReportData) => r.id));
+          const missingSeeds = SEED_REPORTS.filter((s) => !existingIds.has(s.id));
+          return [...parsed, ...missingSeeds];
+        }
+      } catch (e) {
+        // fallback
+      }
+    }
+    return SEED_REPORTS;
   });
 
   const [students, setStudents] = useState<StudentData[]>(() => {
     const saved = localStorage.getItem('dme_registered_students');
     return saved ? JSON.parse(saved) : SEED_STUDENTS;
   });
+
+  const [teachers, setTeachers] = useState<TeacherData[]>(() => {
+    const saved = localStorage.getItem('dme_registered_teachers');
+    return saved ? JSON.parse(saved) : SEED_TEACHERS;
+  });
+
+  const activeTeacher = useMemo(() => {
+    const found = teachers.find((t) => t.id === activeTeacherId);
+    return found || teachers[0] || SEED_TEACHERS[0];
+  }, [teachers, activeTeacherId]);
 
   const [standalonePhotos, setStandalonePhotos] = useState<PhotoItem[]>(() => {
     const saved = localStorage.getItem('dme_standalone_photos');
@@ -394,6 +976,7 @@ export default function App() {
     format: 'jpg' | 'png';
     blob?: Blob;
   } | null>(null);
+  const [createInputMode, setCreateInputMode] = useState<'quick-guru' | 'visual-card'>('quick-guru');
   const [copiedSuccess, setCopiedSuccess] = useState(false);
   const [saveReportSuccess, setSaveReportSuccess] = useState(false);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
@@ -493,9 +1076,25 @@ export default function App() {
       }
     );
 
+    const unsubscribeTeachers = subscribeTeachersFromCloud(
+      (cloudTeachers) => {
+        if (cloudTeachers.length > 0) {
+          setTeachers(cloudTeachers);
+        } else {
+          SEED_TEACHERS.forEach((seed) => {
+            saveTeacherToCloud(seed).catch(console.error);
+          });
+        }
+      },
+      (err) => {
+        console.warn('Firebase teachers sync listener warning:', err);
+      }
+    );
+
     return () => {
       unsubscribeReports();
       unsubscribeStudents();
+      unsubscribeTeachers();
       unsubscribePhotos();
       unsubscribeBillings();
       unsubscribeCertificates();
@@ -538,6 +1137,15 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('dme_registered_students', JSON.stringify(students));
   }, [students]);
+
+  // Sync registered teachers to localStorage
+  useEffect(() => {
+    localStorage.setItem('dme_registered_teachers', JSON.stringify(teachers));
+  }, [teachers]);
+
+  useEffect(() => {
+    localStorage.setItem('dme_active_teacher_id', activeTeacherId);
+  }, [activeTeacherId]);
 
   // Sync viewMode, publicTab, and adminTab to localStorage
   useEffect(() => {
@@ -584,6 +1192,47 @@ export default function App() {
     deleteStudentFromCloud(id).catch((err) => {
       console.error('Failed to delete student from cloud:', err);
     });
+  };
+
+  const handleSaveTeacher = (teacherToSave: TeacherData) => {
+    setTeachers((prev) => {
+      const idx = prev.findIndex((t) => t.id === teacherToSave.id);
+      if (idx >= 0) {
+        const copy = [...prev];
+        copy[idx] = teacherToSave;
+        return copy;
+      }
+      return [teacherToSave, ...prev];
+    });
+
+    saveTeacherToCloud(teacherToSave).catch((err) => {
+      console.error('Failed to sync teacher to cloud:', err);
+    });
+  };
+
+  const handleDeleteTeacher = (id: string) => {
+    setTeachers((prev) => prev.filter((t) => t.id !== id));
+    deleteTeacherFromCloud(id).catch((err) => {
+      console.error('Failed to delete teacher from cloud:', err);
+    });
+  };
+
+  const handleSaveReportFromSubmission = (newReport: ReportData) => {
+    setSavedReports((prev) => {
+      const existingIdx = prev.findIndex((r) => r.id === newReport.id);
+      if (existingIdx >= 0) {
+        const copy = [...prev];
+        copy[existingIdx] = newReport;
+        return copy;
+      }
+      return [newReport, ...prev];
+    });
+    setReport(newReport);
+    saveReportToCloud(newReport).catch((err) => {
+      console.error('Failed to sync new report to cloud:', err);
+    });
+    setSaveReportSuccess(true);
+    setTimeout(() => setSaveReportSuccess(false), 2500);
   };
 
   const handleUploadPhoto = async (photo: PhotoItem) => {
@@ -876,16 +1525,21 @@ export default function App() {
             setViewMode('admin');
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
+          onGoToTeacher={() => setIsTeacherLoginModalOpen(true)}
           onOpenInstallModal={() => setIsInstallModalOpen(true)}
-          contactPhone={settings.nomorWA || '6281234567890'}
+          contactPhone={settings.nomorWA || '6287879069404'}
           registeredStudentsCount={students.length}
         />
-      ) : (
+      ) : viewMode === 'admin' ? (
         <AdminHeader
           adminTab={adminTab}
           onAdminTabChange={setAdminTab}
           onExitAdmin={() => {
             setViewMode('public');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          onGoToTeacherPortal={() => {
+            setViewMode('teacher');
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
           onDownloadJpg={() => handleDownloadImage('jpg')}
@@ -896,11 +1550,12 @@ export default function App() {
           adminLinkCopied={adminLinkCopied}
           onOpenInstallModal={() => setIsInstallModalOpen(true)}
           studentsCount={students.length}
+          teachersCount={teachers.length}
           certificatesCount={savedCertificates.length}
           photosCount={totalPhotosCount}
           unpaidCount={unpaidBillingsCount}
         />
-      )}
+      ) : null}
 
       {/* PWA INSTALL BANNER */}
       {showInstallBanner && (
@@ -1064,39 +1719,83 @@ export default function App() {
 
             {adminTab === 'create' && (
               <div className="space-y-6">
-                <StatsSummaryPanel reports={savedReports} />
-
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                  {/* FORM INPUTS (LEFT COLUMN) */}
-                  <div className="lg:col-span-6 space-y-4 no-print">
-                    <ReportForm
-                      report={report}
-                      onChange={handleReportChange}
-                      onOpenAiAssistant={() => setIsAiModalOpen(true)}
-                      registeredStudents={students}
-                    />
-
-                    {/* Reset & Quick Actions Bar */}
-                    <div className="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
-                      <button
-                        type="button"
-                        onClick={handleResetForm}
-                        className="px-3 py-2 text-xs font-semibold text-slate-500 hover:text-red-600 transition-colors flex items-center gap-1.5"
-                      >
-                        <RotateCcw className="w-3.5 h-3.5" />
-                        <span>Reset Form</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={handleSaveToHistory}
-                        className="px-4 py-2 text-xs font-bold text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all flex items-center gap-1.5 shadow-2xs"
-                      >
-                        <Save className="w-3.5 h-3.5 text-amber-600" />
-                        <span>{saveReportSuccess ? 'Tersimpan!' : 'Simpan ke Riwayat'}</span>
-                      </button>
-                    </div>
+                {/* SUB-VIEW SWITCHER: GURU INPUT VS VISUAL CARD DESIGNER */}
+                <div className="bg-white p-2 rounded-2xl border border-slate-200 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <div className="flex items-center gap-1.5 w-full sm:w-auto p-1 bg-slate-100 rounded-xl">
+                    <button
+                      type="button"
+                      onClick={() => setCreateInputMode('quick-guru')}
+                      className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+                        createInputMode === 'quick-guru'
+                          ? 'bg-amber-500 text-slate-950 shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                      }`}
+                    >
+                      <span>📝 Mode Guru (Input Selesai Mengajar)</span>
+                      <span className="bg-slate-900/10 text-[10px] px-1.5 py-0.5 rounded font-extrabold">Praktis</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCreateInputMode('visual-card')}
+                      className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+                        createInputMode === 'visual-card'
+                          ? 'bg-amber-500 text-slate-950 shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                      }`}
+                    >
+                      <span>🎨 Mode Kartu & Desain Visual</span>
+                      <span className="bg-slate-900/10 text-[10px] px-1.5 py-0.5 rounded font-extrabold">Ekspor</span>
+                    </button>
                   </div>
+
+                  <div className="text-xs text-slate-500 flex items-center gap-2 px-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span>Tersinkronisasi otomatis ke Dashboard Admin & Rekapan Orang Tua</span>
+                  </div>
+                </div>
+
+                {createInputMode === 'quick-guru' ? (
+                  <TeacherReportSubmissionView
+                    students={students}
+                    teachers={teachers}
+                    onSaveReport={handleSaveReportFromSubmission}
+                    currentTeacherName={settings.namaPengajar}
+                  />
+                ) : (
+                  <>
+                    <StatsSummaryPanel reports={savedReports} />
+
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                      {/* FORM INPUTS (LEFT COLUMN) */}
+                      <div className="lg:col-span-6 space-y-4 no-print">
+                        <ReportForm
+                          report={report}
+                          onChange={handleReportChange}
+                          onOpenAiAssistant={() => setIsAiModalOpen(true)}
+                          registeredStudents={students}
+                        />
+
+                        {/* Reset & Quick Actions Bar */}
+                        <div className="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
+                          <button
+                            type="button"
+                            onClick={handleResetForm}
+                            className="px-3 py-2 text-xs font-semibold text-slate-500 hover:text-red-600 transition-colors flex items-center gap-1.5"
+                          >
+                            <RotateCcw className="w-3.5 h-3.5" />
+                            <span>Reset Form</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={handleSaveToHistory}
+                            className="px-4 py-2 text-xs font-bold text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all flex items-center gap-1.5 shadow-2xs"
+                          >
+                            <Save className="w-3.5 h-3.5 text-amber-600" />
+                            <span>{saveReportSuccess ? 'Tersimpan!' : 'Simpan ke Riwayat'}</span>
+                          </button>
+                        </div>
+                      </div>
 
                   {/* LIVE CARD PREVIEW & EXPORT ACTIONS (RIGHT COLUMN) */}
                   <div className="lg:col-span-6 space-y-4 sticky top-20">
@@ -1199,8 +1898,10 @@ export default function App() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </>
             )}
+          </div>
+        )}
 
             {adminTab === 'billing' && (
               <BillingSummaryView
@@ -1284,7 +1985,57 @@ export default function App() {
             )}
 
             {adminTab === 'guide' && <GuideView />}
+
+            {adminTab === 'teachers' && (
+              <TeacherManagementView
+                teachers={teachers}
+                onSaveTeacher={handleSaveTeacher}
+                onDeleteTeacher={handleDeleteTeacher}
+              />
+            )}
+
+            {adminTab === 'recap' && (
+              <AdminReportRecapView
+                reports={savedReports}
+                students={students}
+                teachers={teachers}
+                onSelectReport={handleSelectFromHistory}
+                onDeleteReport={handleDeleteHistoryReport}
+                contactWA={settings.nomorWA || '087879069404'}
+              />
+            )}
           </div>
+        )}
+
+        {/* ======================================================== */}
+        {/* 3. TEACHER PORTAL (DASBOR KHUSUS GURU TERPUSAT)          */}
+        {/* ======================================================== */}
+        {viewMode === 'teacher' && activeTeacher && (
+          <TeacherDashboardView
+            teacher={activeTeacher}
+            allTeachers={teachers}
+            students={students}
+            reports={savedReports}
+            onSaveReport={handleSaveReportFromSubmission}
+            onSaveStudent={handleSaveStudent}
+            onUpdateTeacherProfile={handleSaveTeacher}
+            onSwitchTeacher={(newTchId) => {
+              setActiveTeacherId(newTchId);
+            }}
+            onLogout={() => {
+              setViewMode('public');
+              localStorage.setItem('dme_view_mode', 'public');
+            }}
+            onGoToAdmin={() => {
+              setViewMode('admin');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onGoToPublic={() => {
+              setViewMode('public');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            contactWA={settings.nomorWA || '087879069404'}
+          />
         )}
       </main>
 
@@ -1639,23 +2390,32 @@ export default function App() {
               </ul>
             </div>
 
-            {/* Kolom 3: Kontak & Portal Admin */}
+            {/* Kolom 3: Kontak & Portal Admin/Guru */}
             <div className="space-y-2.5">
               <h5 className="text-xs font-bold uppercase tracking-wider text-amber-300">
-                Konsultasi &amp; Admin
+                Konsultasi &amp; Akses Pengajar
               </h5>
               <div className="space-y-2 text-xs text-slate-400">
                 <p>📍 Layanan Guru Datang ke Rumah &amp; Online Interaktif</p>
-                <p>💬 Konsultasi: 0812-3456-7890</p>
-                <div className="pt-2">
+                <p>💬 Konsultasi WA: 0878-7906-9404</p>
+                <div className="pt-2 flex flex-wrap gap-2">
+                  <button
+                    onClick={() => {
+                      setIsTeacherLoginModalOpen(true);
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black text-slate-950 bg-amber-500 hover:bg-amber-400 transition-all shadow-sm"
+                  >
+                    <span>👨‍🏫 Portal Guru</span>
+                  </button>
+
                   <button
                     onClick={() => {
                       setViewMode(viewMode === 'admin' ? 'public' : 'admin');
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-amber-950 bg-amber-400 hover:bg-amber-300 transition-all shadow-sm"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-slate-800 hover:bg-slate-700 transition-all shadow-sm border border-slate-700"
                   >
-                    <span>{viewMode === 'admin' ? '🌐 Ke Halaman Depan' : '🔐 Portal Admin & Tutor'}</span>
+                    <span>{viewMode === 'admin' ? '🌐 Ke Web Depan' : '🔐 Admin Pusat'}</span>
                   </button>
                 </div>
               </div>
@@ -1672,6 +2432,19 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      {/* TEACHER LOGIN & ACCOUNT PICKER MODAL */}
+      <TeacherLoginModal
+        isOpen={isTeacherLoginModalOpen}
+        onClose={() => setIsTeacherLoginModalOpen(false)}
+        teachers={teachers}
+        onSelectTeacher={(selectedTeacher) => {
+          setActiveTeacherId(selectedTeacher.id);
+          setViewMode('teacher');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
+        contactWA={settings.nomorWA || '087879069404'}
+      />
     </div>
   );
 }

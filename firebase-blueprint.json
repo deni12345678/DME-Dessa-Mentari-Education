@@ -165,6 +165,47 @@
         }
       },
       "required": ["namaSiswa", "jenjang", "status", "createdAt"]
+    },
+    "Teacher": {
+      "title": "Guru / Tutor Les Privat",
+      "description": "Data registrasi dan akun guru Dessa Mentari Education",
+      "type": "object",
+      "properties": {
+        "namaLengkap": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Nama lengkap dan gelar pengajar"
+        },
+        "email": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Alamat email aktif guru"
+        },
+        "nomorWA": {
+          "type": "string",
+          "maxLength": 50,
+          "description": "Nomor WhatsApp / telepon aktif"
+        },
+        "areaDomisili": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "Wilayah domisili atau penugasan les privat"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Aktif", "Non-Aktif"],
+          "description": "Status akun guru"
+        },
+        "username": {
+          "type": "string",
+          "description": "ID login atau username guru"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Waktu pendaftaran guru"
+        }
+      },
+      "required": ["namaLengkap", "email", "nomorWA", "status", "createdAt"]
     }
   },
   "firestore": {
@@ -179,6 +220,12 @@
         "$ref": "#/entities/Student"
       },
       "description": "Koleksi data siswa terdaftar les privat"
+    },
+    "/teachers/{teacherId}": {
+      "schema": {
+        "$ref": "#/entities/Teacher"
+      },
+      "description": "Koleksi data guru dan tentor terdaftar"
     }
   }
 }
